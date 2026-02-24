@@ -1,0 +1,23 @@
+{
+  "name": "WiseSpender",
+  "short_name": "WiseSpender",
+  "description": "Smart expense tracker with auto-categorization, forecasting, and payment reminders",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#38bdf8",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f1117'/><text x='50' y='65' text-anchor='middle' font-size='50' fill='%2338bdf8'>W</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "share_target": {
+    "action": "/index.html",
+    "method": "GET",
+    "params": {
+      "text": "sms"
+    }
+  }
+}
