@@ -1052,7 +1052,9 @@ function detectRecurring(txns){
     const isGeneric = /^bank (credit|debit)$/.test(desc);
     if(isGeneric && !t.targetAccount) return;
     
-    const k = t.targetAccount ? `tgt:${t.targetAccount.toLowerCase().trim()}` : `desc:${desc}`;
+    const src = t.accountNumber || 'Unknown';
+    const tgt = t.targetAccount ? t.targetAccount.toLowerCase().trim() : desc;
+    const k = `${src}|${tgt}|${t.amount}`;
     if(!groups[k])groups[k]=[];
     groups[k].push(t);
   });
