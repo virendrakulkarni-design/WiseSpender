@@ -703,10 +703,10 @@ function suggestRecurring(desc){
 const BankMessageParser = {
   AMOUNT_PATS:[/(?:Rs\.?|INR|₹)\s*([\d,]+\.?\d*)/i,/(?:amount|amt|rs)\s*:?\s*([\d,]+\.?\d*)/i,/([\d,]+\.?\d*)\s*(?:debited|credited)/i],
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
-  NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-]{3,40})(?:\r|\n|$)/i,
-  TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i],
-  MERCHANT_PAT:/(?:at|towards)\s+([A-Za-z0-9\s&.'\-]{3,30})/i,
-  INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-]{2,30})$/im,
+  NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-\/]{3,40})(?:\.|\r|\n|$)/i,
+  TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-\/]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-\/]{3,30})(?:\b|$)/i],
+  MERCHANT_PAT:/(?:at|towards)\s+([A-Za-z0-9\s&.'\-\/]{3,30})/i,
+  INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-\/]{2,30})(?:\.|\r|\n|$)/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
   CREDIT_KW:['credited','credit','received','deposited','refund','cashback','reversed','salary'],
   BANK_MAP:{hdfc:'HDFC',sbi:'SBI',icici:'ICICI',axis:'Axis',kotak:'Kotak',pnb:'PNB',boi:'BOI',canara:'Canara',idfc:'IDFC',yes:'Yes Bank',paytm:'Paytm',phonepe:'PhonePe',gpay:'GPay'},
@@ -770,8 +770,15 @@ const BankMessageParser = {
     let description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
 
     if(targetAccount && description.includes(targetAccount)) {
-      description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ').replace(/\b(to|from|upi)\b/ig, '').replace(/\s+/g, ' ').trim();
+      description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ');
     }
+
+    // Global cleanup for descriptions
+    description = description.replace(/\b(to|from|upi)\b/ig, '')
+                             .replace(/\s+(to|from|upi)$/i, '')
+                             .replace(/^[.\s]+|[.\s]+$/g, '')
+                             .replace(/\s+/g, ' ')
+                             .trim();
 
     const lower = text.toLowerCase();
     let mode = '';
