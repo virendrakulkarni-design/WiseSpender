@@ -703,20 +703,20 @@ function suggestRecurring(desc){
 const BankMessageParser = {
   AMOUNT_PATS:[/(?:Rs\.?|INR|₹)\s*([\d,]+\.?\d*)/i,/(?:amount|amt|rs)\s*:?\s*([\d,]+\.?\d*)/i,/([\d,]+\.?\d*)\s*(?:debited|credited)/i],
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
-  NARRATION_PAT:/(?:merchant name|narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9 \t&.'\-\/]{3,40})(?:\.|\r|\n|$)/i,
-  TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9 \t&.'\-\/]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9 \t&.'\-\/]{3,30})(?:\b|$)/i],
-  MERCHANT_PAT:/(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/)\s*([A-Za-z0-9 \t&.'\-\/]{3,30})/i,
-  INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9 \t&.'\-\/]{2,30})(?:\.|\r|\n|$)/im,
+  NARRATION_PAT:/\b(?:merchant name|narration|remarks|description|details|particulars|info)\b\s*[:\-]?\s*([A-Za-z0-9 \t&.'\-\/]{3,40})(?:\.|\r|\n|$)/i,
+  TARGET_PATS:[/\b(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/\b(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9 \t&.'\-\/]{3,30})(?:\b|$)/i,/\b(?:received from|by)\s+([A-Za-z0-9 \t&.'\-\/]{3,30})(?:\b|$)/i],
+  MERCHANT_PAT:/\b(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/)\s*([A-Za-z0-9 \t&.'\-\/]{3,30})/i,
+  INFO_PAT:/(?:[-–]\s*|\binfo:\s*|\bref:\s*|\bfor\s+)([A-Za-z][A-Za-z0-9 \t&.'\-\/]{2,30})(?:\.|\r|\n|$)/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
   CREDIT_KW:['credited','credit','received','deposited','refund','cashback','reversed','salary'],
   BANK_MAP:{hdfc:'HDFC',sbi:'SBI',icici:'ICICI',axis:'Axis',kotak:'Kotak',pnb:'PNB',boi:'BOI',canara:'Canara',idfc:'IDFC',yes:'Yes Bank',paytm:'Paytm',phonepe:'PhonePe',gpay:'GPay'},
 
   parseAmount(t){for(const p of this.AMOUNT_PATS){const m=t.match(p);if(m)return parseFloat(m[1].replace(/,/g,''));}return null;},
   parseAccount(t){for(const p of this.ACCT_PATS){const m=t.match(p);if(m)return 'XX'+m[1].slice(-4);}return '';},
-  parseType(t){const l=t.toLowerCase();let d=0,c=0;this.DEBIT_KW.forEach(k=>{if(l.includes(k))d++;});this.CREDIT_KW.forEach(k=>{if(l.includes(k))c++;});return c>d?'credit':'debit';},
+  parseType(t){const l=t.toLowerCase().replace(/credit card/g, '');let d=0,c=0;this.DEBIT_KW.forEach(k=>{if(l.includes(k))d++;});this.CREDIT_KW.forEach(k=>{if(l.includes(k))c++;});return c>d?'credit':'debit';},
   parseTarget(t){for(const p of this.TARGET_PATS){const m=t.match(p);if(m){const v=m[1].trim();if(!/^(you|your|yours)$/i.test(v))return v;}}return '';},
   parseMerchant(t){
-    const skip=/^(your|a\/c|ac|account|bank|the|an|rs|inr|the narration|information|reference|this)\b/i;
+    const skip=/^(your|a\/c|ac|account|bank|banking|the|an|rs|inr|the narration|information|reference|this)\b/i;
     const n=t.match(this.NARRATION_PAT);
     if(n&&!skip.test(n[1].trim()))return n[1].trim();
     const m=t.match(this.MERCHANT_PAT);
