@@ -703,10 +703,10 @@ function suggestRecurring(desc){
 const BankMessageParser = {
   AMOUNT_PATS:[/(?:Rs\.?|INR|₹)\s*([\d,]+\.?\d*)/i,/(?:amount|amt|rs)\s*:?\s*([\d,]+\.?\d*)/i,/([\d,]+\.?\d*)\s*(?:debited|credited)/i],
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
-  NARRATION_PAT:/\b(?:merchant name|narration|remarks|description|details|particulars|info)\b\s*[:\-]?\s*([A-Za-z0-9 \t&.'\-\/]{3,40})(?:\.|\r|\n|$)/i,
-  TARGET_PATS:[/\b(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/\b(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9 \t&.'\-\/]{3,30})(?:\b|$)/i,/\b(?:received from|by)\s+([A-Za-z0-9 \t&.'\-\/]{3,30})(?:\b|$)/i],
-  MERCHANT_PAT:/\b(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/)\s*([A-Za-z0-9 \t&.'\-\/]{3,30})/i,
-  INFO_PAT:/(?:[-–]\s*|\binfo:\s*|\bref:\s*|\bfor\s+)([A-Za-z][A-Za-z0-9 \t&.'\-\/]{2,30})(?:\.|\r|\n|$)/im,
+  NARRATION_PAT:/\b(?:merchant name|narration|remarks|description|details|particulars|info)\b\s*[:\-]?\s*([A-Za-z0-9 \t&.'\-\/]{3,50})(?:\.|\r|\n|$)/i,
+  TARGET_PATS:[/\b(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/\b(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9 \t&.'\-\/]{3,50})(?:\b|$)/i,/\b(?:received from|by)\s+([A-Za-z0-9 \t&.'\-\/]{3,50})(?:\b|$)/i],
+  MERCHANT_PAT:/\b(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/)\s*([A-Za-z0-9 \t&.'\-\/]{3,50})/i,
+  INFO_PAT:/(?:[-–]\s*|\binfo:\s*|\bref:\s*|\bfor\s+)([A-Za-z][A-Za-z0-9 \t&.'\-\/]{2,50})(?:\.|\r|\n|$)/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
   CREDIT_KW:['credited','credit','received','deposited','refund','cashback','reversed','salary'],
   BANK_MAP:{hdfc:'HDFC',sbi:'SBI',icici:'ICICI',axis:'Axis',kotak:'Kotak',pnb:'PNB',boi:'BOI',canara:'Canara',idfc:'IDFC',yes:'Yes Bank',paytm:'Paytm',phonepe:'PhonePe',gpay:'GPay'},
@@ -784,6 +784,9 @@ const BankMessageParser = {
     if(targetAccount && description.includes(targetAccount)) {
       description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ');
     }
+    
+    // Clean NEFT, IMPS, RTGS, UPI prefixes from description if they exist
+    description = description.replace(/^(?:NEFT|IMPS|RTGS|UPI)[\/\-]/i, '');
 
     // Global cleanup for descriptions
     description = description.replace(/\b(to|from|upi)\b/ig, '')
@@ -1343,7 +1346,10 @@ function renderTransactions(){
     const displayDesc = alias || t.description;
     
     // Hide the "To/From" string if it is exactly the same as the description being displayed
-    const tgt=(t.targetAccount && t.targetAccount !== displayDesc)?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';
+    const tgtLower = (t.targetAccount || '').toLowerCase();
+    const descLower = displayDesc.toLowerCase();
+    const isRedundant = tgtLower === descLower || tgtLower.includes(descLower) || descLower.includes(tgtLower);
+    const tgt=(t.targetAccount && !isRedundant)?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';
     
     const modeBadge = t.mode ? `<span style="font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;background:var(--bg3);color:var(--text2)">${t.mode}</span>` : '-';
     const refTxt = t.refNo ? `<span style="font-family:monospace;font-size:0.75rem;color:var(--text3)" title="${t.refNo}">${t.refNo.slice(-6)}</span>` : '-';
