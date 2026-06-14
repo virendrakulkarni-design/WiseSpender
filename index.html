@@ -1326,7 +1326,7 @@ function renderTransactions(){
   const acctF=document.getElementById('txFilterAcct').value;
   const recF=document.getElementById('txFilterRecurring').value;
   const sort=document.getElementById('txSort').value;
-  if(search)filtered=filtered.filter(t=>t.description.toLowerCase().includes(search)||(CAT_MAP[t.category]?.name||'').toLowerCase().includes(search)||t.bank.toLowerCase().includes(search)||(t.accountNumber||'').toLowerCase().includes(search));
+  if(search)filtered=filtered.filter(t=>t.description.toLowerCase().includes(search)||(CAT_MAP[t.category]?.name||'').toLowerCase().includes(search)||t.bank.toLowerCase().includes(search)||(t.accountNumber||'').toLowerCase().includes(search)||(t.targetAccount||'').toLowerCase().includes(search));
   if(typeF!=='all')filtered=filtered.filter(t=>t.type===typeF);
   if(catF&&catF!=='all')filtered=filtered.filter(t=>t.category===catF);
   if(acctF&&acctF!=='all')filtered=filtered.filter(t=>(t.accountNumber||'')===acctF);
