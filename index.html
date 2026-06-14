@@ -758,10 +758,10 @@ const BankMessageParser = {
     const type=this.parseType(text);
 
     let merchant=this.parseMerchant(text);
-    if(merchant) merchant = merchant.replace(/\s+(to|from|upi)$/i, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
+    if(merchant) merchant = merchant.trim().replace(/\s+(to|from|upi)$/i, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
 
     let targetAccount=this.parseTarget(text);
-    if(targetAccount) targetAccount = targetAccount.replace(/\s+(to|from|upi)$/i, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
+    if(targetAccount) targetAccount = targetAccount.trim().replace(/\s+(to|from|upi)$/i, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
 
     const bank=sender?this.detectBank(sender):this.detectBank(text);
     
