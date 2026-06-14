@@ -691,7 +691,7 @@ const BankMessageParser = {
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
   NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-]{3,40})(?:\r|\n|$)/i,
   TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/UPI\/[A-Za-z0-9\s&.'\-]+\/([A-Za-z0-9\s&.'\-]+)/i],
-  MERCHANT_PAT:/(?:at|for|towards)\s+([A-Za-z0-9\s&.'\-]{3,30})/i,
+  MERCHANT_PAT:/(?:at|towards)\s+([A-Za-z0-9\s&.'\-]{3,30})/i,
   INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-]{2,30})$/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
   CREDIT_KW:['credited','credit','received','deposited','refund','cashback','reversed','salary'],
@@ -702,7 +702,7 @@ const BankMessageParser = {
   parseType(t){const l=t.toLowerCase();let d=0,c=0;this.DEBIT_KW.forEach(k=>{if(l.includes(k))d++;});this.CREDIT_KW.forEach(k=>{if(l.includes(k))c++;});return c>d?'credit':'debit';},
   parseTarget(t){for(const p of this.TARGET_PATS){const m=t.match(p);if(m){const v=m[1].trim();if(!/^(you|your|yours)$/i.test(v))return v;}}return '';},
   parseMerchant(t){
-    const skip=/^(your|a\/c|ac|account|bank|the|an|rs|inr|the narration)\b/i;
+    const skip=/^(your|a\/c|ac|account|bank|the|an|rs|inr|the narration|information|reference|this)\b/i;
     const n=t.match(this.NARRATION_PAT);
     if(n&&!skip.test(n[1].trim()))return n[1].trim();
     const m=t.match(this.MERCHANT_PAT);
@@ -736,8 +736,12 @@ const BankMessageParser = {
     if(targetAccount && description.includes(targetAccount)) {
       description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ').replace(/\b(to|from|upi)\b/ig, '').replace(/\s+/g, ' ').trim();
     }
-    if(!description || /^[\d\s]+$/.test(description)) {
-      description = (type==='credit'?'Bank Credit':'Bank Debit');
+    if(!description || /^[\d\s]+$/.test(description) || description === 'Bank Credit' || description === 'Bank Debit') {
+      if(targetAccount && !/^[\d\s]+$/.test(targetAccount)) {
+         description = (type==='credit'?'Transfer from ':'Payment to ') + targetAccount;
+      } else {
+         description = (type==='credit'?'Bank Credit':'Bank Debit');
+      }
     }
 
     const category=autoCategory(description);
@@ -1724,7 +1728,7 @@ async function fetchGmailTransactions(){
       const c=CAT_MAP[t.category]||CAT_MAP.other;
       const dupBadge=t._isDup?'<span class="dup-badge dup-warn">&#9888; Possible Dup</span>':'<span class="dup-badge dup-new">&#10003; New</span>';
       const srcLabel=t.source&&t.source.startsWith('gmail:')?t.source.replace('gmail:',''):'';
-      const tgt=t.targetAccount?` · To/From: ${t.targetAccount}`:'';
+      const tgt=t.targetAccount?` · ${t.type==='credit'?'From':'To'}: ${t.targetAccount}`:'';
       return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}${dupBadge}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} · ${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}${srcLabel?' · '+srcLabel:''}${tgt}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;
     }).join('');
     document.getElementById('gmailPreview').style.display='block';
