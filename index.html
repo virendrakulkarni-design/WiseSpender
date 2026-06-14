@@ -646,6 +646,8 @@ function suggestRecurring(desc){
 const BankMessageParser = {
   AMOUNT_PATS:[/(?:Rs\.?|INR|₹)\s*([\d,]+\.?\d*)/i,/(?:amount|amt|rs)\s*:?\s*([\d,]+\.?\d*)/i,/([\d,]+\.?\d*)\s*(?:debited|credited)/i],
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
+  NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-]{3,40})/i,
+  TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/UPI\/[A-Za-z0-9\s&.'\-]+\/([A-Za-z0-9\s&.'\-]+)/i],
   MERCHANT_PAT:/(?:at|for|towards)\s+([A-Za-z0-9\s&.'\-]{3,30})/i,
   INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-]{2,30})$/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
@@ -655,9 +657,12 @@ const BankMessageParser = {
   parseAmount(t){for(const p of this.AMOUNT_PATS){const m=t.match(p);if(m)return parseFloat(m[1].replace(/,/g,''));}return null;},
   parseAccount(t){for(const p of this.ACCT_PATS){const m=t.match(p);if(m)return 'XX'+m[1].slice(-4);}return '';},
   parseType(t){const l=t.toLowerCase();let d=0,c=0;this.DEBIT_KW.forEach(k=>{if(l.includes(k))d++;});this.CREDIT_KW.forEach(k=>{if(l.includes(k))c++;});return c>d?'credit':'debit';},
+  parseTarget(t){for(const p of this.TARGET_PATS){const m=t.match(p);if(m)return m[1].trim();}return '';},
   parseMerchant(t){
+    const skip=/^(your|a\/c|ac|account|bank|the|an|rs|inr)\b/i;
+    const n=t.match(this.NARRATION_PAT);
+    if(n&&!skip.test(n[1].trim()))return n[1].trim();
     const m=t.match(this.MERCHANT_PAT);
-    const skip=/^(your|a\/c|ac|account|bank|the)\b/i;
     if(m&&!skip.test(m[1].trim()))return m[1].trim();
     const m2=t.match(this.INFO_PAT);
     if(m2&&!skip.test(m2[1].trim()))return m2[1].trim();
@@ -670,16 +675,25 @@ const BankMessageParser = {
   parseMessage(text, sender, gmailMsgId){
     const amount=this.parseAmount(text);
     if(!amount||amount<=0)return null;
+    const accountNumber=this.parseAccount(text);
+    // Strict marketing filter: must have an account number if auto-imported
+    if(!accountNumber && (gmailMsgId || sender)) return null;
+
+    // Strict marketing filter: must have strong transactional keywords
+    const l=text.toLowerCase();
+    const hasTxnKw=[...this.DEBIT_KW, ...this.CREDIT_KW].some(k=>l.includes(k));
+    if(!hasTxnKw && (gmailMsgId || sender)) return null;
+
     const type=this.parseType(text);
     const merchant=this.parseMerchant(text);
-    const accountNumber=this.parseAccount(text);
+    const targetAccount=this.parseTarget(text);
     const bank=sender?this.detectBank(sender):this.detectBank(text);
     const description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
     const category=autoCategory(description);
     const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
     const tx={
       id, date:new Date().toISOString().split('T')[0],
-      description,amount,type,category,bank,accountNumber,
+      description,amount,type,category,bank,accountNumber,targetAccount,
       isRecurring:false, recurringType:null, recurringGroupId:null,
       source:'sms', fingerprint:''
     };
@@ -1165,7 +1179,7 @@ function renderTransactions(){
   const tbody=document.getElementById('txBody'),empty=document.getElementById('txEmpty');
   if(!filtered.length){tbody.innerHTML='';tbody.parentElement.style.display='none';empty.style.display='block';return;}
   tbody.parentElement.style.display='';empty.style.display='none';
-  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';;return`<tr><td style="white-space:nowrap">${fmtDate(t.date)}</td><td>${src}${t.description}${recurringBadge(t)}<br><span style="font-size:.72rem;color:var(--text3)">${t.bank}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${t.type==='credit'?'Income':'Expense'}</td></tr>`;}).join('');
+  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';const tgt=t.targetAccount?` · <span style="color:var(--accent2)">To/From: ${t.targetAccount}</span>`:'';return`<tr><td style="white-space:nowrap">${fmtDate(t.date)}</td><td>${src}${t.description}${recurringBadge(t)}<br><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${t.type==='credit'?'Income':'Expense'}</td></tr>`;}).join('');
 }
 
 function renderAccounts(){
@@ -1539,8 +1553,8 @@ function closeGmailModal(){document.getElementById('gmailModal').classList.remov
 async function fetchFromAccount(acct, days, existingFPs, progCallback){
   const after=new Date();after.setDate(after.getDate()-days);
   const afterTs=Math.floor(after.getTime()/1000);
-  // Simpler, broader Gmail query — catches all bank alert emails
-  const query=`after:${afterTs} (subject:(debited OR credited OR transaction OR payment OR alert OR statement) OR from:(hdfc OR sbi OR icici OR axis OR kotak OR paytm OR phonepe OR alerts@))`;
+  // Strictly require transactional subject AND bank sender to filter marketing
+  const query=`after:${afterTs} (subject:(debited OR credited OR transaction OR payment OR alert OR spent OR received OR deduction) AND from:(hdfc OR sbi OR icici OR axis OR kotak OR paytm OR phonepe OR alerts@))`;
 
   const searchResp=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=200`,{headers:{'Authorization':'Bearer '+acct.accessToken}});
   if(!searchResp.ok){
@@ -1622,7 +1636,8 @@ async function fetchGmailTransactions(){
       const c=CAT_MAP[t.category]||CAT_MAP.other;
       const dupBadge=t._isDup?'<span class="dup-badge dup-warn">&#9888; Possible Dup</span>':'<span class="dup-badge dup-new">&#10003; New</span>';
       const srcLabel=t.source&&t.source.startsWith('gmail:')?t.source.replace('gmail:',''):'';
-      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}${dupBadge}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} · ${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}${srcLabel?' · '+srcLabel:''}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;
+      const tgt=t.targetAccount?` · To/From: ${t.targetAccount}`:'';
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}${dupBadge}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} · ${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}${srcLabel?' · '+srcLabel:''}${tgt}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;
     }).join('');
     document.getElementById('gmailPreview').style.display='block';
     document.getElementById('gmailImportBtn').disabled=parsedGmail.length===0;
