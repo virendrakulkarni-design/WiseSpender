@@ -323,7 +323,7 @@ input,select,textarea{font-family:inherit}
       </div>
       <div class="card" style="padding:0;overflow-x:auto">
         <table class="tx-table">
-          <thead><tr><th>Date</th><th>Description</th><th>Mode</th><th>Category</th><th>Amount</th><th>Account</th><th style="width:40px"></th></tr></thead>
+          <thead><tr><th>Date</th><th>Description</th><th>Mode</th><th>Category</th><th>Amount</th><th>Account</th><th>Ref</th><th style="width:40px"></th></tr></thead>
           <tbody id="txBody"></tbody>
         </table>
       </div>
@@ -704,7 +704,7 @@ const BankMessageParser = {
   AMOUNT_PATS:[/(?:Rs\.?|INR|₹)\s*([\d,]+\.?\d*)/i,/(?:amount|amt|rs)\s*:?\s*([\d,]+\.?\d*)/i,/([\d,]+\.?\d*)\s*(?:debited|credited)/i],
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
   NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-]{3,40})(?:\r|\n|$)/i,
-  TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/UPI\/[A-Za-z0-9\s&.'\-]+\/([A-Za-z0-9\s&.'\-]+)/i],
+  TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i],
   MERCHANT_PAT:/(?:at|towards)\s+([A-Za-z0-9\s&.'\-]{3,30})/i,
   INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-]{2,30})$/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
@@ -723,9 +723,17 @@ const BankMessageParser = {
     if(m&&!skip.test(m[1].trim()))return m[1].trim();
     const m2=t.match(this.INFO_PAT);
     if(m2&&!skip.test(m2[1].trim()))return m2[1].trim();
-    const upi=t.match(/UPI\/([A-Za-z0-9\s&.'\-]+)/i);
-    if(upi)return upi[1].trim();
     return '';
+  },
+  parseUpiInfo(t) {
+    const upiMatch = t.match(/UPI\/([A-Za-z0-9.\-_]+)\/([A-Za-z0-9.\-_]+)\/([A-Za-z0-9\s&.'\-]+)/i);
+    if(upiMatch) {
+       if(/^[A-Z]{2,3}$/i.test(upiMatch[1])) {
+          return { refNo: upiMatch[2], name: upiMatch[3].split('/')[0].trim() };
+       }
+       return { refNo: upiMatch[1], name: upiMatch[2].split('/')[0].trim() };
+    }
+    return null;
   },
   detectBank(t){const l=t.toLowerCase();for(const[k,v]of Object.entries(this.BANK_MAP)){if(l.includes(k))return v;}return 'Bank';},
 
@@ -743,8 +751,16 @@ const BankMessageParser = {
 
     const type=this.parseType(text);
     const merchant=this.parseMerchant(text);
-    const targetAccount=this.parseTarget(text);
+    let targetAccount=this.parseTarget(text);
     const bank=sender?this.detectBank(sender):this.detectBank(text);
+    
+    let refNo = '';
+    const upiInfo = this.parseUpiInfo(text);
+    if(upiInfo) {
+      if(!targetAccount || targetAccount === upiInfo.refNo) targetAccount = upiInfo.name;
+      refNo = upiInfo.refNo;
+    }
+
     let description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
 
     if(targetAccount && description.includes(targetAccount)) {
@@ -776,7 +792,7 @@ const BankMessageParser = {
     const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
     const tx={
       id, date:new Date().toISOString(),
-      description,amount,type,category,bank,accountNumber,targetAccount, mode,
+      description,amount,type,category,bank,accountNumber,targetAccount, mode, refNo,
       isRecurring:false, recurringType:null, recurringGroupId:null,
       source:'sms', fingerprint:''
     };
@@ -1302,7 +1318,8 @@ function renderTransactions(){
     const displayDesc = alias || t.description;
     const tgt=t.targetAccount?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';
     const modeBadge = t.mode ? `<span style="font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;background:var(--bg3);color:var(--text2)">${t.mode}</span>` : '-';
-    return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${displayDesc}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td>${modeBadge}</td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;
+    const refTxt = t.refNo ? `<span style="font-family:monospace;font-size:0.75rem;color:var(--text3)" title="${t.refNo}">${t.refNo.slice(-6)}</span>` : '-';
+    return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${displayDesc}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td>${modeBadge}</td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${refTxt}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;
   }).join('');
 }
 
