@@ -323,7 +323,7 @@ input,select,textarea{font-family:inherit}
       </div>
       <div class="card" style="padding:0;overflow-x:auto">
         <table class="tx-table">
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Account</th><th>Type</th></tr></thead>
+          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Account</th><th style="width:40px"></th></tr></thead>
           <tbody id="txBody"></tbody>
         </table>
       </div>
@@ -462,6 +462,49 @@ input,select,textarea{font-family:inherit}
       <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
         <button type="button" class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">Add Transaction</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT TRANSACTION MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Transaction</div>
+      <button class="modal-close" onclick="closeEditModal()">&times;</button>
+    </div>
+    <form onsubmit="saveEditTransaction(event)">
+      <input type="hidden" id="editTxnId">
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" id="editDesc" class="form-control" required>
+      </div>
+      <div class="rec-toggle-container" style="margin:1rem 0">
+        <label class="rec-toggle-wrap">
+          <input type="checkbox" id="editIsRecurring" onchange="toggleEditRecurringFreq()">
+          <span class="rec-toggle-label">&#128257; Mark as Recurring Transaction</span>
+        </label>
+        <div class="rec-freq-row" id="editRecFreqRow">
+          <button type="button" class="rec-freq-btn" data-freq="weekly" onclick="setEditRecFreq('weekly')">Weekly</button>
+          <button type="button" class="rec-freq-btn" data-freq="monthly" onclick="setEditRecFreq('monthly')">Monthly</button>
+          <button type="button" class="rec-freq-btn" data-freq="quarterly" onclick="setEditRecFreq('quarterly')">Quarterly</button>
+          <button type="button" class="rec-freq-btn" data-freq="half-yearly" onclick="setEditRecFreq('half-yearly')">Half-Yearly</button>
+          <button type="button" class="rec-freq-btn" data-freq="yearly" onclick="setEditRecFreq('yearly')">Yearly</button>
+        </div>
+      </div>
+      <div class="rec-toggle-container" style="margin:1rem 0;background:rgba(255,255,255,0.03)">
+        <label class="rec-toggle-wrap">
+          <input type="checkbox" id="editExcludeFromTotals">
+          <span class="rec-toggle-label">&#128683; Exclude from Totals (Obsolete/Reversed)</span>
+        </label>
+      </div>
+      <div style="display:flex;gap:.75rem;justify-content:space-between;margin-top:1.5rem">
+        <button type="button" class="btn btn-outline" style="color:var(--red);border-color:rgba(248,113,113,0.3)" onclick="deleteTransaction()">Delete</button>
+        <div style="display:flex;gap:.75rem">
+          <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
       </div>
     </form>
   </div>
@@ -646,7 +689,7 @@ function suggestRecurring(desc){
 const BankMessageParser = {
   AMOUNT_PATS:[/(?:Rs\.?|INR|₹)\s*([\d,]+\.?\d*)/i,/(?:amount|amt|rs)\s*:?\s*([\d,]+\.?\d*)/i,/([\d,]+\.?\d*)\s*(?:debited|credited)/i],
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
-  NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-]{3,40})/i,
+  NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-]{3,40})(?:\r|\n|$)/i,
   TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-]{3,30})(?:\b|$)/i,/UPI\/[A-Za-z0-9\s&.'\-]+\/([A-Za-z0-9\s&.'\-]+)/i],
   MERCHANT_PAT:/(?:at|for|towards)\s+([A-Za-z0-9\s&.'\-]{3,30})/i,
   INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-]{2,30})$/im,
@@ -657,9 +700,9 @@ const BankMessageParser = {
   parseAmount(t){for(const p of this.AMOUNT_PATS){const m=t.match(p);if(m)return parseFloat(m[1].replace(/,/g,''));}return null;},
   parseAccount(t){for(const p of this.ACCT_PATS){const m=t.match(p);if(m)return 'XX'+m[1].slice(-4);}return '';},
   parseType(t){const l=t.toLowerCase();let d=0,c=0;this.DEBIT_KW.forEach(k=>{if(l.includes(k))d++;});this.CREDIT_KW.forEach(k=>{if(l.includes(k))c++;});return c>d?'credit':'debit';},
-  parseTarget(t){for(const p of this.TARGET_PATS){const m=t.match(p);if(m)return m[1].trim();}return '';},
+  parseTarget(t){for(const p of this.TARGET_PATS){const m=t.match(p);if(m){const v=m[1].trim();if(!/^(you|your|yours)$/i.test(v))return v;}}return '';},
   parseMerchant(t){
-    const skip=/^(your|a\/c|ac|account|bank|the|an|rs|inr)\b/i;
+    const skip=/^(your|a\/c|ac|account|bank|the|an|rs|inr|the narration)\b/i;
     const n=t.match(this.NARRATION_PAT);
     if(n&&!skip.test(n[1].trim()))return n[1].trim();
     const m=t.match(this.MERCHANT_PAT);
@@ -692,7 +735,7 @@ const BankMessageParser = {
     const category=autoCategory(description);
     const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
     const tx={
-      id, date:new Date().toISOString().split('T')[0],
+      id, date:new Date().toISOString(),
       description,amount,type,category,bank,accountNumber,targetAccount,
       isRecurring:false, recurringType:null, recurringGroupId:null,
       source:'sms', fingerprint:''
@@ -773,7 +816,8 @@ function saveAppSettings(){
 // ============================================================
 function computeFingerprint(tx){
   const normDesc=(tx.description||'').toLowerCase().replace(/\s+/g,'').slice(0,14);
-  return `${tx.date}_${Math.round(tx.amount)}_${normDesc}`;
+  const dStr=(tx.date||'').split('T')[0];
+  return `${dStr}_${Math.round(tx.amount)}_${normDesc}`;
 }
 
 // ============================================================
@@ -872,16 +916,17 @@ function mkTx(month,cat,type,descs,ranges,recurringType,recurringGroupId,fixedDe
 // ANALYTICS ENGINE
 // ============================================================
 function computeAnalytics(txns){
-  const debits=txns.filter(t=>t.type==='debit'),credits=txns.filter(t=>t.type==='credit');
+  const validTxns=txns.filter(t=>!t.excludeFromTotals);
+  const debits=validTxns.filter(t=>t.type==='debit'),credits=validTxns.filter(t=>t.type==='credit');
   const totalExpense=debits.reduce((s,t)=>s+t.amount,0),totalIncome=credits.reduce((s,t)=>s+t.amount,0);
   const net=totalIncome-totalExpense,savingsRate=totalIncome>0?((net/totalIncome)*100):0;
   const byCat={};
   debits.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.amount;});
   const catBreakdown=Object.entries(byCat).map(([id,amount])=>({...CAT_MAP[id],amount,pct:totalExpense>0?(amount/totalExpense*100):0})).sort((a,b)=>b.amount-a.amount);
   const byMonth={};
-  txns.forEach(t=>{const mk=t.date.slice(0,7);if(!byMonth[mk])byMonth[mk]={income:0,expense:0,recurringExpense:0};if(t.type==='credit')byMonth[mk].income+=t.amount;else{byMonth[mk].expense+=t.amount;if(t.isRecurring)byMonth[mk].recurringExpense+=t.amount;}});
+  validTxns.forEach(t=>{const mk=t.date.slice(0,7);if(!byMonth[mk])byMonth[mk]={income:0,expense:0,recurringExpense:0};if(t.type==='credit')byMonth[mk].income+=t.amount;else{byMonth[mk].expense+=t.amount;if(t.isRecurring)byMonth[mk].recurringExpense+=t.amount;}});
   const months=Object.entries(byMonth).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>({month:k,...v,net:v.income-v.expense}));
-  return{totalExpense,totalIncome,net,savingsRate,catBreakdown,months,count:txns.length};
+  return{totalExpense,totalIncome,net,savingsRate,catBreakdown,months,count:validTxns.length};
 }
 
 // ============================================================
@@ -897,13 +942,13 @@ function intervalToFreq(days){
 function detectRecurring(txns){
   // Group by normalized description
   const groups={};
-  txns.forEach(t=>{const k=t.description.toLowerCase().trim();if(!groups[k])groups[k]=[];groups[k].push(t);});
+  txns.forEach(t=>{if(t.excludeFromTotals)return;const k=t.description.toLowerCase().trim();if(k.length>=4){if(!groups[k])groups[k]=[];groups[k].push(t);}});
 
   // Build group ID map (desc → groupId) for automatic detection only
   const autoGroupIds={};
 
   Object.entries(groups).forEach(([k,arr])=>{
-    if(arr.length<2)return;
+    if(arr.length<3)return;
     const months=new Set(arr.map(t=>t.date.slice(0,7)));
     if(months.size<2)return;
 
@@ -935,7 +980,8 @@ function detectRecurring(txns){
 // FORECAST — separates recurring fixed costs from variable
 // ============================================================
 function forecastNextMonth(txns){
-  const a=computeAnalytics(txns);if(a.months.length<2)return null;
+  const validTxns=txns.filter(t=>!t.excludeFromTotals);
+  const a=computeAnalytics(validTxns);if(a.months.length<2)return null;
   const ms=a.months;
 
   // Weighted average for variable and income
@@ -945,7 +991,7 @@ function forecastNextMonth(txns){
 
   // Recurring next-due prediction per group
   const recGroups={};
-  txns.filter(t=>t.isRecurring&&t.type==='debit'&&t.recurringGroupId).forEach(t=>{
+  validTxns.filter(t=>t.isRecurring&&t.type==='debit'&&t.recurringGroupId).forEach(t=>{
     const g=t.recurringGroupId;
     if(!recGroups[g])recGroups[g]={desc:t.description,cat:t.category,freq:t.recurringType,amounts:[],dates:[]};
     recGroups[g].amounts.push(t.amount);
@@ -984,9 +1030,10 @@ function forecastNextMonth(txns){
 }
 
 function getPaymentReminders(txns){
+  const validTxns=txns.filter(t=>!t.excludeFromTotals);
   // Use recurring group IDs
   const groups={};
-  txns.filter(t=>t.isRecurring&&t.type==='debit'&&t.recurringGroupId).forEach(t=>{
+  validTxns.filter(t=>t.isRecurring&&t.type==='debit'&&t.recurringGroupId).forEach(t=>{
     const g=t.recurringGroupId;
     if(!groups[g])groups[g]={desc:t.description,cat:t.category,freq:t.recurringType,amounts:[],dates:[]};
     groups[g].amounts.push(t.amount);
@@ -994,7 +1041,7 @@ function getPaymentReminders(txns){
   });
 
   // Fallback: description-based groups without groupId
-  txns.filter(t=>t.isRecurring&&t.type==='debit'&&!t.recurringGroupId).forEach(t=>{
+  validTxns.filter(t=>t.isRecurring&&t.type==='debit'&&!t.recurringGroupId).forEach(t=>{
     const k='desc:'+t.description.toLowerCase().trim();
     if(!groups[k])groups[k]={desc:t.description,cat:t.category,freq:t.recurringType,amounts:[],dates:[]};
     groups[k].amounts.push(t.amount);
@@ -1102,6 +1149,7 @@ function svgLineChart(txns){
 // ============================================================
 function fmt(n){return '₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function fmtDate(d){return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtDateTime(d){if(!d)return'';const dt=new Date(d);if(isNaN(dt.getTime()))return d;return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+(d.includes('T')?', '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'');}
 function monthLabel(mk){const[y,m]=mk.split('-');return new Date(y,m-1).toLocaleDateString('en-IN',{month:'short',year:'2-digit'});}
 
 const FREQ_LABELS={'weekly':'Weekly','monthly':'Monthly','quarterly':'Quarterly','half-yearly':'Half-Yearly','yearly':'Yearly'};
@@ -1179,29 +1227,40 @@ function renderTransactions(){
   const tbody=document.getElementById('txBody'),empty=document.getElementById('txEmpty');
   if(!filtered.length){tbody.innerHTML='';tbody.parentElement.style.display='none';empty.style.display='block';return;}
   tbody.parentElement.style.display='';empty.style.display='none';
-  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';const tgt=t.targetAccount?` · <span style="color:var(--accent2)">To/From: ${t.targetAccount}</span>`:'';return`<tr><td style="white-space:nowrap">${fmtDate(t.date)}</td><td>${src}${t.description}${recurringBadge(t)}<br><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${t.type==='credit'?'Income':'Expense'}</td></tr>`;}).join('');
+  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';const tgt=t.targetAccount?` · <span style="color:var(--accent2)">To/From: ${t.targetAccount}</span>`:'';return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${t.description}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;}).join('');
 }
 
 function renderAccounts(){
   const el=document.getElementById('accountsContent');
-  if(!transactions.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#127974;</div><div class="empty-title">No accounts</div><div class="empty-desc">Add transactions to see account grouping.</div></div>';return;}
-  const groups={};
-  transactions.forEach(t=>{
+  const validTxns=transactions.filter(t=>!t.excludeFromTotals);
+  if(!validTxns.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#127974;</div><div class="empty-title">No accounts</div><div class="empty-desc">Add transactions to see account grouping.</div></div>';return;}
+  const groups={}, targetGroups={};
+  validTxns.forEach(t=>{
     const k=t.accountNumber||'Unknown';
     if(!groups[k])groups[k]={accountNumber:k,bank:t.bank,label:t.accountLabel||'',income:0,expense:0,count:0,cats:{}};
     groups[k].count++;
     if(t.type==='credit')groups[k].income+=t.amount;else groups[k].expense+=t.amount;
     groups[k].cats[t.category]=(groups[k].cats[t.category]||0)+t.amount;
     if(t.accountLabel&&!groups[k].label)groups[k].label=t.accountLabel;
+
+    if(t.targetAccount){
+      const tk=t.targetAccount;
+      if(!targetGroups[tk])targetGroups[tk]={targetAccount:tk,income:0,expense:0,count:0};
+      targetGroups[tk].count++;
+      if(t.type==='credit')targetGroups[tk].income+=t.amount;else targetGroups[tk].expense+=t.amount;
+    }
   });
   const accts=Object.values(groups).sort((a,b)=>b.count-a.count);
+  const targets=Object.values(targetGroups).sort((a,b)=>b.count-a.count).slice(0,8);
   const totalInc=accts.reduce((s,a)=>s+a.income,0);
   const totalExp=accts.reduce((s,a)=>s+a.expense,0);
   el.innerHTML=`<div class="metrics" style="margin-bottom:1.5rem">
     <div class="metric"><div class="metric-label">&#127974; Accounts</div><div class="metric-value text-accent">${accts.length}</div></div>
     <div class="metric"><div class="metric-label">&#128200; Total Inflow</div><div class="metric-value text-green">${fmt(totalInc)}</div></div>
     <div class="metric"><div class="metric-label">&#128201; Total Outflow</div><div class="metric-value text-red">${fmt(totalExp)}</div></div>
-  </div><div class="account-grid">${accts.map(a=>{
+  </div>
+  <h3 style="margin-bottom:1rem;color:var(--text1)">My Accounts</h3>
+  <div class="account-grid">${accts.map(a=>{
     const net=a.income-a.expense;
     const acctInfo=ACCT_MAP[a.accountNumber];
     const label=acctInfo?.label||a.label||'Account';
@@ -1223,7 +1282,20 @@ function renderAccounts(){
       </div>
       <div style="display:flex;flex-direction:column;gap:.3rem">${miniBars}</div>
     </div>`;
-  }).join('')}</div>`;
+  }).join('')}</div>
+  ${targets.length?`
+  <h3 style="margin:2rem 0 1rem 0;color:var(--text1)">Frequent Payees & Senders</h3>
+  <div class="account-grid">${targets.map(t=>{
+    return`<div class="account-card">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.5rem">${t.targetAccount}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.82rem">
+        <div>Sent To Them<br><span class="text-red" style="font-weight:700">${fmt(t.expense)}</span></div>
+        <div>Received From<br><span class="text-green" style="font-weight:700">${fmt(t.income)}</span></div>
+      </div>
+    </div>`;
+  }).join('')}</div>
+  `:''}
+  `;
 }
 
 function filterByAccount(acct){
@@ -1239,7 +1311,8 @@ function populateAccountFilter(){
 
 function renderForecast(){
   const el=document.getElementById('forecastContent');
-  const fc=forecastNextMonth(transactions);
+  const validTxns=transactions.filter(t=>!t.excludeFromTotals);
+  const fc=forecastNextMonth(validTxns);
   if(!fc){el.innerHTML='<div class="empty"><div class="empty-icon">&#128300;</div><div class="empty-title">Not enough data</div><div class="empty-desc">Need at least 2 months of transactions for forecasting.</div></div>';return;}
   const trendColor=fc.trend==='increasing'?'var(--red)':fc.trend==='decreasing'?'var(--green)':'var(--amber)';
   const catEntries=Object.values(fc.catForecast).sort((a,b)=>b.amount-a.amount);
@@ -1585,7 +1658,7 @@ async function fetchFromAccount(acct, days, existingFPs, progCallback){
     const body=extractEmailText(msg.payload);
     const parsed=BankMessageParser.parseMessage(subject+' '+body,from,mId);
     if(parsed){
-      if(dateH){const ed=new Date(dateH);if(!isNaN(ed.getTime()))parsed.date=ed.toISOString().split('T')[0];}
+      if(dateH){const ed=new Date(dateH);if(!isNaN(ed.getTime()))parsed.date=ed.toISOString();}
       parsed.source='gmail:'+acct.email;
       // Re-compute fingerprint with correct date
       parsed.fingerprint=computeFingerprint(parsed);
@@ -1822,6 +1895,53 @@ function openAddModal(){
   document.getElementById('addModal').classList.add('show');
 }
 function closeAddModal(){document.getElementById('addModal').classList.remove('show');resetVoiceUI();}
+
+let editRecFreq=null;
+function openEditModal(id){
+  const t=transactions.find(x=>x.id===id);
+  if(!t)return;
+  document.getElementById('editTxnId').value=t.id;
+  document.getElementById('editDesc').value=t.description;
+  document.getElementById('editIsRecurring').checked=t.isRecurring;
+  document.getElementById('editExcludeFromTotals').checked=!!t.excludeFromTotals;
+  editRecFreq=t.recurringType||null;
+  toggleEditRecurringFreq();
+  if(editRecFreq) setEditRecFreq(editRecFreq);
+  else document.querySelectorAll('#editRecFreqRow .rec-freq-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('editModal').classList.add('show');
+}
+function closeEditModal(){document.getElementById('editModal').classList.remove('show');}
+function toggleEditRecurringFreq(){
+  const show=document.getElementById('editIsRecurring').checked;
+  const el=document.getElementById('editRecFreqRow');
+  if(show)el.classList.add('show'); else el.classList.remove('show');
+}
+function setEditRecFreq(f){
+  editRecFreq=f;
+  document.querySelectorAll('#editRecFreqRow .rec-freq-btn').forEach(b=>{
+    if(b.dataset.freq===f)b.classList.add('active');else b.classList.remove('active');
+  });
+}
+function saveEditTransaction(e){
+  e.preventDefault();
+  const id=document.getElementById('editTxnId').value;
+  const t=transactions.find(x=>x.id===id);
+  if(!t)return;
+  t.description=document.getElementById('editDesc').value.trim();
+  t.isRecurring=document.getElementById('editIsRecurring').checked;
+  t.recurringType=t.isRecurring?editRecFreq:null;
+  t.excludeFromTotals=document.getElementById('editExcludeFromTotals').checked;
+  if(t.isRecurring && !t.recurringGroupId) t.recurringGroupId=(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2));
+  closeEditModal();
+  save();renderAll();showToast('Transaction updated','success');
+}
+function deleteTransaction(){
+  if(!confirm('Are you sure you want to delete this transaction?'))return;
+  const id=document.getElementById('editTxnId').value;
+  transactions=transactions.filter(t=>t.id!==id);
+  closeEditModal();
+  save();renderAll();showToast('Transaction deleted','error');
+}
 
 function saveTransaction(e){
   e.preventDefault();
