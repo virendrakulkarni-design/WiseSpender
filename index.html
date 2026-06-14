@@ -738,7 +738,12 @@ const BankMessageParser = {
   },
   detectBank(t){const l=t.toLowerCase();for(const[k,v]of Object.entries(this.BANK_MAP)){if(l.includes(k))return v;}return 'Bank';},
 
-  parseMessage(text, sender, gmailMsgId){
+  parseMessage(rawText, sender, gmailMsgId){
+    // Clean up generic bank disclaimers that confuse the parser
+    const text = rawText.replace(/if (?:this )?(?:transaction )?(?:was )?not(?: initiated)?(?: done)?(?: by you)?.*$/i, '')
+                        .replace(/not you\?.*$/i, '')
+                        .replace(/call \d+.*$/i, '');
+
     const amount=this.parseAmount(text);
     if(!amount||amount<=0)return null;
     const accountNumber=this.parseAccount(text);
