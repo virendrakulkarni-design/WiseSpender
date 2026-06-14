@@ -323,7 +323,7 @@ input,select,textarea{font-family:inherit}
       </div>
       <div class="card" style="padding:0;overflow-x:auto">
         <table class="tx-table">
-          <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Account</th><th style="width:40px"></th></tr></thead>
+          <thead><tr><th>Date</th><th>Description</th><th>Mode</th><th>Category</th><th>Amount</th><th>Account</th><th style="width:40px"></th></tr></thead>
           <tbody id="txBody"></tbody>
         </table>
       </div>
@@ -337,6 +337,11 @@ input,select,textarea{font-family:inherit}
 
     <!-- ACCOUNTS -->
     <div class="page" id="page-accounts">
+      <div class="filters" style="margin-bottom:1rem;gap:1rem;">
+        <input type="date" class="form-input" id="acctFilterFrom" onchange="renderAccounts()" title="From Date" style="max-width:180px">
+        <input type="date" class="form-input" id="acctFilterTo" onchange="renderAccounts()" title="To Date" style="max-width:180px">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('acctFilterFrom').value='';document.getElementById('acctFilterTo').value='';renderAccounts()">Clear Dates</button>
+      </div>
       <div id="accountsContent"></div>
     </div>
 
@@ -363,7 +368,16 @@ input,select,textarea{font-family:inherit}
         <div class="notify-banner-text"><strong>Gmail won't work from file://</strong> — open this app via a local server (e.g. <code>npx serve .</code> or VS Code Live Server) so Google OAuth accepts the origin.</div>
       </div>
       <div class="card" style="max-width:600px">
-        <div class="card-title">Google OAuth Settings</div>
+        <div class="card-title">Preferences & Settings</div>
+        <div class="form-group" style="margin-bottom:1.5rem">
+          <label class="rec-toggle-wrap">
+            <input type="checkbox" id="autoRecurringToggle">
+            <span class="rec-toggle-label">Auto-Detect Recurring Transactions</span>
+          </label>
+          <div style="font-size:0.75rem;color:var(--text3);margin-top:0.4rem;padding-left:1.8rem;">
+            Automatically groups recurring payments if they occur across multiple months.
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Google OAuth Client ID</label>
           <input type="text" class="form-input" id="googleClientId" placeholder="your-client-id.apps.googleusercontent.com">
@@ -737,24 +751,24 @@ const BankMessageParser = {
       description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ').replace(/\b(to|from|upi)\b/ig, '').replace(/\s+/g, ' ').trim();
     }
 
-    if(!description || /^[\d\s]+$/.test(description) || description === 'Bank Credit' || description === 'Bank Debit') {
-      const lower = text.toLowerCase();
-      let mode = '';
-      if(lower.includes('upi')) mode = type==='credit'?'UPI Receipt':'UPI Payment';
-      else if(lower.includes('atm')) mode = 'ATM Withdrawal';
-      else if(lower.includes('neft')) mode = 'NEFT Transfer';
-      else if(lower.includes('imps')) mode = 'IMPS Transfer';
-      else if(lower.includes('rtgs')) mode = 'RTGS Transfer';
-      else if(lower.includes('ach')) mode = 'ACH Transaction';
-      else if(lower.includes('pos')) mode = type==='credit'?'Card Refund':'Card Payment';
-      else if(lower.includes('auto debit') || lower.includes('autodebit')) mode = 'Auto-Debit';
-      else if(lower.includes('emi')) mode = 'EMI Payment';
-      else mode = type==='credit'?'Account Deposit':'Fund Transfer';
+    const lower = text.toLowerCase();
+    let mode = '';
+    if(lower.includes('upi')) mode = 'UPI';
+    else if(lower.includes('atm')) mode = 'ATM';
+    else if(lower.includes('neft')) mode = 'NEFT';
+    else if(lower.includes('imps')) mode = 'IMPS';
+    else if(lower.includes('rtgs')) mode = 'RTGS';
+    else if(lower.includes('ach')) mode = 'ACH';
+    else if(lower.includes('pos')) mode = 'Card';
+    else if(lower.includes('auto debit') || lower.includes('autodebit')) mode = 'Auto-Debit';
+    else if(lower.includes('emi')) mode = 'EMI';
+    else mode = 'Transfer';
 
+    if(!description || /^[\d\s]+$/.test(description) || description === 'Bank Credit' || description === 'Bank Debit') {
       if(targetAccount && !/^[\d\s]+$/.test(targetAccount)) {
-         description = `${mode} ${type==='credit'?'from':'to'} ${targetAccount}`;
+         description = targetAccount;
       } else {
-         description = mode;
+         description = 'Fund Transfer';
       }
     }
 
@@ -762,7 +776,7 @@ const BankMessageParser = {
     const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
     const tx={
       id, date:new Date().toISOString(),
-      description,amount,type,category,bank,accountNumber,targetAccount,
+      description,amount,type,category,bank,accountNumber,targetAccount, mode,
       isRecurring:false, recurringType:null, recurringGroupId:null,
       source:'sms', fingerprint:''
     };
@@ -828,10 +842,25 @@ function load(){try{transactions=JSON.parse(localStorage.getItem(LS_KEY))||[];}c
   // Backfill fingerprints for old transactions that don't have them
   transactions.forEach(t=>{if(!t.fingerprint)t.fingerprint=computeFingerprint(t);});
 }
-function loadAppSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{};}catch(e){return {};}}
+let accountAliases = {};
+
+function loadAppSettings(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY))||{};
+    if(s.autoRecurringEnabled === undefined) s.autoRecurringEnabled = true;
+    if(!s.accountAliases) s.accountAliases = {};
+    accountAliases = s.accountAliases;
+    return s;
+  }catch(e){
+    accountAliases = {};
+    return {autoRecurringEnabled: true, accountAliases: {}};
+  }
+}
 function saveAppSettings(){
   const s=loadAppSettings();
   s.googleClientId=document.getElementById('googleClientId').value.trim();
+  s.autoRecurringEnabled=document.getElementById('autoRecurringToggle').checked;
+  s.accountAliases = accountAliases;
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
   showToast('Settings saved','success');
   refreshGoogleAuth();
@@ -966,6 +995,8 @@ function intervalToFreq(days){
 }
 
 function detectRecurring(txns){
+  const _s = loadAppSettings();
+  if(_s.autoRecurringEnabled === false) return;
   // Group by target account or description
   const groups={};
   txns.forEach(t=>{
@@ -1264,13 +1295,26 @@ function renderTransactions(){
   const tbody=document.getElementById('txBody'),empty=document.getElementById('txEmpty');
   if(!filtered.length){tbody.innerHTML='';tbody.parentElement.style.display='none';empty.style.display='block';return;}
   tbody.parentElement.style.display='';empty.style.display='none';
-  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';const tgt=t.targetAccount?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${t.description}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;}).join('');
+  tbody.innerHTML=filtered.map(t=>{
+    const c=CAT_MAP[t.category]||CAT_MAP.other;
+    const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';
+    const alias = accountAliases[t.targetAccount];
+    const displayDesc = alias || t.description;
+    const tgt=t.targetAccount?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';
+    const modeBadge = t.mode ? `<span style="font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;background:var(--bg3);color:var(--text2)">${t.mode}</span>` : '-';
+    return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${displayDesc}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td>${modeBadge}</td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;
+  }).join('');
 }
 
 function renderAccounts(){
   const el=document.getElementById('accountsContent');
-  const validTxns=transactions.filter(t=>!t.excludeFromTotals);
-  if(!validTxns.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#127974;</div><div class="empty-title">No accounts</div><div class="empty-desc">Add transactions to see account grouping.</div></div>';return;}
+  const fromD = document.getElementById('acctFilterFrom').value;
+  const toD = document.getElementById('acctFilterTo').value;
+  let validTxns=transactions.filter(t=>!t.excludeFromTotals);
+  if(fromD) validTxns=validTxns.filter(t=>t.date.split('T')[0] >= fromD);
+  if(toD) validTxns=validTxns.filter(t=>t.date.split('T')[0] <= toD);
+
+  if(!validTxns.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#127974;</div><div class="empty-title">No accounts</div><div class="empty-desc">No transactions in this date range.</div></div>';return;}
   const groups={}, targetGroups={};
   validTxns.forEach(t=>{
     const k=t.accountNumber||'Unknown';
@@ -1326,11 +1370,12 @@ function renderAccounts(){
   ${targets.length?`
   <h3 style="margin:2rem 0 1rem 0;color:var(--text1)">Frequent Payees & Senders</h3>
   <div class="account-grid">${targets.map(t=>{
+    const alias = accountAliases[t.targetAccount];
     const namesArr=Array.from(t.names);
-    const dispName=namesArr.length?namesArr[0]:t.targetAccount;
-    const subName=namesArr.length?t.targetAccount:'Unknown';
+    const dispName=alias || (namesArr.length?namesArr[0]:t.targetAccount);
+    const subName=alias ? t.targetAccount : (namesArr.length?t.targetAccount:'Unknown');
     return`<div class="account-card">
-      <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${dispName}">${dispName}</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="renameAccount('${t.targetAccount}')" title="Click to rename payee">${dispName} <span style="font-size:0.7rem;color:var(--accent)">✎</span></div>
       <div style="font-size:.8rem;color:var(--text3);margin-bottom:.6rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subName}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.82rem">
         <div>Sent To Them<br><span class="text-red" style="font-weight:700">${fmt(t.expense)}</span></div>
@@ -1340,6 +1385,16 @@ function renderAccounts(){
   }).join('')}</div>
   `:''}
   `;
+}
+
+function renameAccount(acc) {
+  const newName = prompt(`Enter a name for account/UPI ${acc}`, accountAliases[acc] || '');
+  if(newName !== null) {
+    if(newName.trim() === '') delete accountAliases[acc];
+    else accountAliases[acc] = newName.trim();
+    saveAppSettings();
+    renderAll();
+  }
 }
 
 function filterByAccount(acct){
@@ -1686,12 +1741,10 @@ async function fetchFromAccount(acct, days, existingFPs, progCallback){
   const msgIds=(searchData.messages||[]).map(m=>m.id);
   if(!msgIds.length)return [];
 
+  const newMsgIds = msgIds.filter(mId => !transactions.find(t=>t.gmailMsgId===mId));
   const results=[];
-  for(let i=0;i<msgIds.length;i++){
-    // Skip already-imported message IDs
-    const mId=msgIds[i];
-    if(transactions.find(t=>t.gmailMsgId===mId))continue;
-
+  for(let i=0;i<newMsgIds.length;i++){
+    const mId=newMsgIds[i];
     const msgResp=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${mId}?format=full`,{headers:{'Authorization':'Bearer '+acct.accessToken}});
     if(!msgResp.ok)continue;
     const msg=await msgResp.json();
@@ -2053,6 +2106,8 @@ renderAll();
 // Restore settings
 const _s=loadAppSettings();
 if(_s.googleClientId)document.getElementById('googleClientId').value=_s.googleClientId;
+if(_s.autoRecurringEnabled!==undefined)document.getElementById('autoRecurringToggle').checked=_s.autoRecurringEnabled;
+else document.getElementById('autoRecurringToggle').checked=true;
 
 // Init Google Auth when GIS library loads
 function tryInitGoogle(){
