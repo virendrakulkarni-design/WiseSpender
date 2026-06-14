@@ -1387,7 +1387,7 @@ function renderAccounts(){
     }
   });
   const accts=Object.values(groups).sort((a,b)=>b.count-a.count);
-  const targets=Object.values(targetGroups).sort((a,b)=>b.count-a.count).slice(0,24);
+  const targets=Object.values(targetGroups).sort((a,b)=>b.count-a.count).slice(0, 200); // Increased cap to 200
   const totalInc=accts.reduce((s,a)=>s+a.income,0);
   const totalExp=accts.reduce((s,a)=>s+a.expense,0);
   el.innerHTML=`<div class="metrics" style="margin-bottom:1.5rem">
