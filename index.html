@@ -736,11 +736,25 @@ const BankMessageParser = {
     if(targetAccount && description.includes(targetAccount)) {
       description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ').replace(/\b(to|from|upi)\b/ig, '').replace(/\s+/g, ' ').trim();
     }
+
     if(!description || /^[\d\s]+$/.test(description) || description === 'Bank Credit' || description === 'Bank Debit') {
+      const lower = text.toLowerCase();
+      let mode = '';
+      if(lower.includes('upi')) mode = type==='credit'?'UPI Receipt':'UPI Payment';
+      else if(lower.includes('atm')) mode = 'ATM Withdrawal';
+      else if(lower.includes('neft')) mode = 'NEFT Transfer';
+      else if(lower.includes('imps')) mode = 'IMPS Transfer';
+      else if(lower.includes('rtgs')) mode = 'RTGS Transfer';
+      else if(lower.includes('ach')) mode = 'ACH Transaction';
+      else if(lower.includes('pos')) mode = type==='credit'?'Card Refund':'Card Payment';
+      else if(lower.includes('auto debit') || lower.includes('autodebit')) mode = 'Auto-Debit';
+      else if(lower.includes('emi')) mode = 'EMI Payment';
+      else mode = type==='credit'?'Account Deposit':'Fund Transfer';
+
       if(targetAccount && !/^[\d\s]+$/.test(targetAccount)) {
-         description = (type==='credit'?'Transfer from ':'Payment to ') + targetAccount;
+         description = `${mode} ${type==='credit'?'from':'to'} ${targetAccount}`;
       } else {
-         description = (type==='credit'?'Bank Credit':'Bank Debit');
+         description = mode;
       }
     }
 
@@ -952,9 +966,20 @@ function intervalToFreq(days){
 }
 
 function detectRecurring(txns){
-  // Group by normalized description
+  // Group by target account or description
   const groups={};
-  txns.forEach(t=>{if(t.excludeFromTotals)return;const k=t.description.toLowerCase().trim();if(k.length>=4){if(!groups[k])groups[k]=[];groups[k].push(t);}});
+  txns.forEach(t=>{
+    if(t.excludeFromTotals)return;
+    const desc = t.description.toLowerCase().trim();
+    if(desc.length<4) return;
+    
+    const isGeneric = /^bank (credit|debit)$/.test(desc);
+    if(isGeneric && !t.targetAccount) return;
+    
+    const k = t.targetAccount ? `tgt:${t.targetAccount.toLowerCase().trim()}` : `desc:${desc}`;
+    if(!groups[k])groups[k]=[];
+    groups[k].push(t);
+  });
 
   // Build group ID map (desc → groupId) for automatic detection only
   const autoGroupIds={};
