@@ -705,7 +705,7 @@ const BankMessageParser = {
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
   NARRATION_PAT:/(?:narration|remarks|description|details|particulars|info)\s*[:\-]?\s*([A-Za-z0-9\s&.'\-\/]{3,40})(?:\.|\r|\n|$)/i,
   TARGET_PATS:[/(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9\s&.'\-\/]{3,30})(?:\b|$)/i,/(?:received from|by)\s+([A-Za-z0-9\s&.'\-\/]{3,30})(?:\b|$)/i],
-  MERCHANT_PAT:/(?:at|towards)\s+([A-Za-z0-9\s&.'\-\/]{3,30})/i,
+  MERCHANT_PAT:/(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/)\s*([A-Za-z0-9\s&.'\-\/]{3,30})/i,
   INFO_PAT:/(?:[-–]\s*|info:\s*|ref:\s*|for\s+)([A-Za-z][A-Za-z0-9\s&.'\-\/]{2,30})(?:\.|\r|\n|$)/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
   CREDIT_KW:['credited','credit','received','deposited','refund','cashback','reversed','salary'],
