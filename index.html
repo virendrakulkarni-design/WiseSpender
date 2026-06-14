@@ -259,7 +259,6 @@ input,select,textarea{font-family:inherit}
         <button class="btn btn-ghost btn-sm" onclick="openAddModal()">+ Add</button>
         <button class="btn btn-ghost btn-sm" onclick="openAddModal();setTimeout(toggleVoiceInput,300)">&#127908; Voice</button>
         <button class="btn btn-ghost btn-sm" onclick="openSmsModal()">&#128172; SMS</button>
-        <button class="btn btn-ghost btn-sm" onclick="openGmailModal()">&#128231; Gmail</button>
         <button class="btn btn-primary btn-sm" onclick="loadTestData()">Test Data</button>
         <button class="btn btn-outline btn-sm" onclick="exportCSV()">CSV</button>
         <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear</button>
@@ -1732,6 +1731,7 @@ function renderGmailAccountsList(){
         <div class="gmail-acct-status">${a.connected?'<span style="color:var(--green)">&#9989; Connected</span>':'<span style="color:var(--amber)">&#9888; Token expired — reconnect</span>'}</div>
       </div>
       <div style="display:flex;gap:.4rem;flex-shrink:0">
+        ${a.connected?`<button class="btn btn-primary btn-sm" onclick="openGmailModalForAccount(${a.idx})">Fetch</button>`:''}
         ${!a.connected?`<button class="btn btn-ghost btn-sm" onclick="reconnectGmailAccount(${a.idx})">Reconnect</button>`:''}
         <button class="btn btn-outline btn-sm" onclick="disconnectGmailAccount(${a.idx})">Remove</button>
       </div>
@@ -1789,6 +1789,11 @@ function openGmailModal(){
   const sel=document.getElementById('gmailAccountSelect');
   sel.innerHTML='<option value="all">All Connected Accounts</option>'+gmailAccounts.filter(a=>a.connected).map(a=>`<option value="${a.idx}">${a.email}</option>`).join('');
   document.getElementById('gmailModal').classList.add('show');
+}
+function openGmailModalForAccount(idx){
+  openGmailModal();
+  const sel=document.getElementById('gmailAccountSelect');
+  if(sel){sel.value=idx;}
 }
 function closeGmailModal(){document.getElementById('gmailModal').classList.remove('show');}
 
