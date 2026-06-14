@@ -769,6 +769,10 @@ const BankMessageParser = {
 
     let description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
 
+    if(upiInfo && description.includes('UPI/') && description.includes(upiInfo.refNo)) {
+       description = upiInfo.name;
+    }
+
     if(targetAccount && description.includes(targetAccount)) {
       description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ');
     }
