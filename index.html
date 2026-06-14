@@ -1427,8 +1427,8 @@ function renderAccounts(){
     const namesArr=Array.from(t.names);
     const dispName=alias || (namesArr.length?namesArr[0]:t.targetAccount);
     const subName=alias ? t.targetAccount : (namesArr.length?t.targetAccount:'Unknown');
-    return`<div class="account-card">
-      <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="renameAccount('${t.targetAccount}')" title="Click to rename payee">${dispName} <span style="font-size:0.7rem;color:var(--accent)">✎</span></div>
+    return`<div class="account-card" style="cursor:pointer" onclick="filterByPayee(event, '${t.targetAccount}')">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="event.stopPropagation(); renameAccount('${t.targetAccount}')" title="Click to rename payee">${dispName} <span style="font-size:0.7rem;color:var(--accent)">✎</span></div>
       <div style="font-size:.8rem;color:var(--text3);margin-bottom:.6rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subName}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.82rem">
         <div>Sent To Them<br><span class="text-red" style="font-weight:700">${fmt(t.expense)}</span></div>
@@ -1453,6 +1453,15 @@ function renameAccount(acc) {
 function filterByAccount(acct){
   document.getElementById('txFilterAcct').value=acct;
   document.querySelector('[data-page="transactions"]').click();
+  renderTransactions();
+}
+
+function filterByPayee(event, payee) {
+  // Prevent firing if they clicked the rename button
+  if (event && event.target.closest && event.target.closest('[onclick^="renameAccount"]')) return;
+  document.getElementById('txSearch').value = payee;
+  document.querySelector('[data-page="transactions"]').click();
+  // Call renderTransactions() manually or trigger an input event
   renderTransactions();
 }
 
