@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wisespender-v5';
+const CACHE_NAME = 'wisespender-v6';
 const ASSETS = ['/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {

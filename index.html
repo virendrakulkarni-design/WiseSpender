@@ -741,6 +741,7 @@ const BankMessageParser = {
   parseMessage(rawText, sender, gmailMsgId){
     // Clean up generic bank disclaimers that confuse the parser
     const text = rawText.replace(/if\s+(?:(?:this|the)\s+)?(?:transaction\s+)?(?:has\s+)?(?:was\s+)?not\s*(?:been\s+)?(?:initiated|intiated|done)?\s*(?:by\s+you)?[\s\S]*$/i, '')
+                        .replace(/(?:\.|,)?\s*(?:to\s+)?check\s+your(?:\s+(?:available\s+)?(?:balance|bal|limit|balan)?)?[\s\S]*$/i, '')
                         .replace(/not you\?[\s\S]*$/i, '')
                         .replace(/call \d+[\s\S]*$/i, '');
 
