@@ -756,8 +756,13 @@ const BankMessageParser = {
     if(!hasTxnKw && (gmailMsgId || sender)) return null;
 
     const type=this.parseType(text);
-    const merchant=this.parseMerchant(text);
+
+    let merchant=this.parseMerchant(text);
+    if(merchant) merchant = merchant.replace(/\s+(to|from|upi)$/i, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
+
     let targetAccount=this.parseTarget(text);
+    if(targetAccount) targetAccount = targetAccount.replace(/\s+(to|from|upi)$/i, '').replace(/^[.\s]+|[.\s]+$/g, '').trim();
+
     const bank=sender?this.detectBank(sender):this.detectBank(text);
     
     let refNo = '';
