@@ -740,7 +740,7 @@ const BankMessageParser = {
 
   parseMessage(rawText, sender, gmailMsgId){
     // Clean up generic bank disclaimers that confuse the parser
-    const text = rawText.replace(/if (?:this|the )?(?:transaction )?(?:has )?(?:was )?not(?: been)?(?: initiated)?(?: done)?(?: by you)?[\s\S]*$/i, '')
+    const text = rawText.replace(/if\s+(?:(?:this|the)\s+)?(?:transaction\s+)?(?:has\s+)?(?:was\s+)?not\s*(?:been\s+)?(?:initiated|intiated|done)?\s*(?:by\s+you)?[\s\S]*$/i, '')
                         .replace(/not you\?[\s\S]*$/i, '')
                         .replace(/call \d+[\s\S]*$/i, '');
 
@@ -1735,7 +1735,13 @@ function extractEmailText(payload){
   if(payload.body?.data){
     try{
       const raw=atob(payload.body.data.replace(/-/g,'+').replace(/_/g,'/'));
-      if(payload.mimeType==='text/html')return raw.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+      if(payload.mimeType==='text/html') {
+         let s = raw.replace(/<br\s*\/?>/ig, '\n')
+                    .replace(/<\/(div|p|tr|li|h[1-6])>/ig, '\n')
+                    .replace(/<[^>]+>/g,' ')
+                    .replace(/[ \t]+/g,' ');
+         return s;
+      }
       return raw;
     }catch(e){}
   }
