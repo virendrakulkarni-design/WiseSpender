@@ -768,6 +768,9 @@ const BankMessageParser = {
     }
 
     let description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
+    if(!targetAccount && merchant) {
+      targetAccount = merchant;
+    }
 
     if(upiInfo && description.includes('UPI/') && description.includes(upiInfo.refNo)) {
        description = upiInfo.name;
