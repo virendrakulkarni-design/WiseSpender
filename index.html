@@ -740,9 +740,9 @@ const BankMessageParser = {
 
   parseMessage(rawText, sender, gmailMsgId){
     // Clean up generic bank disclaimers that confuse the parser
-    const text = rawText.replace(/if (?:this )?(?:transaction )?(?:was )?not(?: initiated)?(?: done)?(?: by you)?.*$/i, '')
-                        .replace(/not you\?.*$/i, '')
-                        .replace(/call \d+.*$/i, '');
+    const text = rawText.replace(/if (?:this )?(?:transaction )?(?:was )?not(?: initiated)?(?: done)?(?: by you)?[\s\S]*$/i, '')
+                        .replace(/not you\?[\s\S]*$/i, '')
+                        .replace(/call \d+[\s\S]*$/i, '');
 
     const amount=this.parseAmount(text);
     if(!amount||amount<=0)return null;
@@ -1322,7 +1322,10 @@ function renderTransactions(){
     const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';
     const alias = accountAliases[t.targetAccount];
     const displayDesc = alias || t.description;
-    const tgt=t.targetAccount?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';
+    
+    // Hide the "To/From" string if it is exactly the same as the description being displayed
+    const tgt=(t.targetAccount && t.targetAccount !== displayDesc)?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';
+    
     const modeBadge = t.mode ? `<span style="font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;background:var(--bg3);color:var(--text2)">${t.mode}</span>` : '-';
     const refTxt = t.refNo ? `<span style="font-family:monospace;font-size:0.75rem;color:var(--text3)" title="${t.refNo}">${t.refNo.slice(-6)}</span>` : '-';
     return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${displayDesc}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td>${modeBadge}</td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${refTxt}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;
@@ -1358,13 +1361,14 @@ function renderAccounts(){
     }
   });
   const accts=Object.values(groups).sort((a,b)=>b.count-a.count);
-  const targets=Object.values(targetGroups).sort((a,b)=>b.count-a.count).slice(0,8);
+  const targets=Object.values(targetGroups).sort((a,b)=>b.count-a.count).slice(0,24);
   const totalInc=accts.reduce((s,a)=>s+a.income,0);
   const totalExp=accts.reduce((s,a)=>s+a.expense,0);
   el.innerHTML=`<div class="metrics" style="margin-bottom:1.5rem">
     <div class="metric"><div class="metric-label">&#127974; Accounts</div><div class="metric-value text-accent">${accts.length}</div></div>
-    <div class="metric"><div class="metric-label">&#128200; Total Inflow</div><div class="metric-value text-green">${fmt(totalInc)}</div></div>
-    <div class="metric"><div class="metric-label">&#128201; Total Outflow</div><div class="metric-value text-red">${fmt(totalExp)}</div></div>
+    <div class="metric"><div class="metric-label">&#128101; Payees</div><div class="metric-value" style="color:var(--accent2)">${Object.keys(targetGroups).length}</div></div>
+    <div class="metric"><div class="metric-label">&#128200; Inflow</div><div class="metric-value text-green">${fmt(totalInc)}</div></div>
+    <div class="metric"><div class="metric-label">&#128201; Outflow</div><div class="metric-value text-red">${fmt(totalExp)}</div></div>
   </div>
   <h3 style="margin-bottom:1rem;color:var(--text1)">My Accounts</h3>
   <div class="account-grid">${accts.map(a=>{
