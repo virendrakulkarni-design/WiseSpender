@@ -731,7 +731,15 @@ const BankMessageParser = {
     const merchant=this.parseMerchant(text);
     const targetAccount=this.parseTarget(text);
     const bank=sender?this.detectBank(sender):this.detectBank(text);
-    const description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
+    let description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
+
+    if(targetAccount && description.includes(targetAccount)) {
+      description = description.replace(targetAccount, '').replace(/[\/\\\-:]/g, ' ').replace(/\b(to|from|upi)\b/ig, '').replace(/\s+/g, ' ').trim();
+    }
+    if(!description || /^[\d\s]+$/.test(description)) {
+      description = (type==='credit'?'Bank Credit':'Bank Debit');
+    }
+
     const category=autoCategory(description);
     const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
     const tx={
@@ -1227,7 +1235,7 @@ function renderTransactions(){
   const tbody=document.getElementById('txBody'),empty=document.getElementById('txEmpty');
   if(!filtered.length){tbody.innerHTML='';tbody.parentElement.style.display='none';empty.style.display='block';return;}
   tbody.parentElement.style.display='';empty.style.display='none';
-  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';const tgt=t.targetAccount?` · <span style="color:var(--accent2)">To/From: ${t.targetAccount}</span>`:'';return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${t.description}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;}).join('');
+  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';const tgt=t.targetAccount?` · <span style="color:var(--accent2)">${t.type==='credit'?'From':'To'}: ${t.targetAccount}</span>`:'';return`<tr ${t.excludeFromTotals?'style="opacity:0.5"':''}><td style="white-space:nowrap;font-size:0.85rem">${fmtDateTime(t.date)}</td><td><div style="white-space:normal;max-width:280px;line-height:1.4">${src}${t.description}${recurringBadge(t)}</div><span style="font-size:.72rem;color:var(--text3)">${t.bank}${tgt}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td><button class="btn btn-ghost btn-sm" onclick="openEditModal('${t.id}')" style="padding:0.2rem 0.5rem;min-width:0;color:var(--text3)">&#8942;</button></td></tr>`;}).join('');
 }
 
 function renderAccounts(){
@@ -1245,9 +1253,12 @@ function renderAccounts(){
 
     if(t.targetAccount){
       const tk=t.targetAccount;
-      if(!targetGroups[tk])targetGroups[tk]={targetAccount:tk,income:0,expense:0,count:0};
+      if(!targetGroups[tk])targetGroups[tk]={targetAccount:tk,names:new Set(),income:0,expense:0,count:0};
       targetGroups[tk].count++;
       if(t.type==='credit')targetGroups[tk].income+=t.amount;else targetGroups[tk].expense+=t.amount;
+      if(t.description && !/^bank (credit|debit)$/i.test(t.description)) {
+        targetGroups[tk].names.add(t.description);
+      }
     }
   });
   const accts=Object.values(groups).sort((a,b)=>b.count-a.count);
@@ -1286,8 +1297,12 @@ function renderAccounts(){
   ${targets.length?`
   <h3 style="margin:2rem 0 1rem 0;color:var(--text1)">Frequent Payees & Senders</h3>
   <div class="account-grid">${targets.map(t=>{
+    const namesArr=Array.from(t.names);
+    const dispName=namesArr.length?namesArr[0]:t.targetAccount;
+    const subName=namesArr.length?t.targetAccount:'Unknown';
     return`<div class="account-card">
-      <div style="font-weight:700;font-size:1rem;margin-bottom:.5rem">${t.targetAccount}</div>
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${dispName}">${dispName}</div>
+      <div style="font-size:.8rem;color:var(--text3);margin-bottom:.6rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subName}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.82rem">
         <div>Sent To Them<br><span class="text-red" style="font-weight:700">${fmt(t.expense)}</span></div>
         <div>Received From<br><span class="text-green" style="font-weight:700">${fmt(t.income)}</span></div>
