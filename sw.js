@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wisespender-v3';
+const CACHE_NAME = 'wisespender-v12';
 const ASSETS = ['/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -18,5 +18,17 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request))
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({type: 'window', includeUncontrolled: true}).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes('index.html') && 'focus' in client) return client.focus();
+      }
+      return clients.openWindow('/index.html');
+    })
   );
 });
