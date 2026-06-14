@@ -1124,7 +1124,7 @@ function forecastNextMonth(txns){
     else if(g.freq==='yearly')next.setFullYear(next.getFullYear()+1);
     else next.setMonth(next.getMonth()+1); // fallback
     return{...g,avg,last,next,occurrences:g.amounts.length};
-  }).sort((a,b)=>a.next-b.next);
+  }).filter(r=>r.next >= new Date(new Date().setHours(0,0,0,0))).sort((a,b)=>a.next-b.next);
 
   const totalRecurringMonthly=recUpcoming.reduce((s,r)=>{
     // Monthly-equivalent of each recurring payment
@@ -1174,7 +1174,7 @@ function getPaymentReminders(txns){
     else if(freq==='yearly')next.setFullYear(next.getFullYear()+1);
     else next.setMonth(next.getMonth()+1);
     return{description:g.desc,category:g.cat,freq,expectedAmount:avg,nextDate:next,occurrences:g.amounts.length,last};
-  }).filter(r=>r.occurrences>=1).sort((a,b)=>a.nextDate-b.nextDate);
+  }).filter(r=>r.occurrences>=1 && r.nextDate >= new Date(new Date().setHours(0,0,0,0))).sort((a,b)=>a.nextDate-b.nextDate);
 }
 
 function detectAnomalies(txns){
