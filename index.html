@@ -87,7 +87,34 @@ input,select,textarea{font-family:inherit}
 .tx-table tr:hover td{background:rgba(56,189,248,.03)}
 .tx-cat{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .6rem;border-radius:999px;font-size:.75rem;font-weight:500}
 .tx-amount{font-weight:700;font-variant-numeric:tabular-nums}
-.tx-recurring{font-size:.65rem;background:rgba(129,140,248,.15);color:var(--accent2);padding:1px 6px;border-radius:4px;margin-left:4px}
+.tx-recurring{font-size:.65rem;padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:600}
+.tx-rec-weekly{background:rgba(56,189,248,.15);color:var(--accent)}
+.tx-rec-monthly{background:rgba(129,140,248,.15);color:var(--accent2)}
+.tx-rec-quarterly{background:rgba(251,191,36,.15);color:var(--amber)}
+.tx-rec-half-yearly{background:rgba(244,114,182,.15);color:var(--pink)}
+.tx-rec-yearly{background:rgba(52,211,153,.15);color:var(--green)}
+.dup-badge{font-size:.65rem;padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:600}
+.dup-new{background:rgba(52,211,153,.15);color:var(--green)}
+.dup-warn{background:rgba(251,191,36,.15);color:var(--amber)}
+.dup-skip{background:rgba(248,113,113,.15);color:var(--red)}
+/* Gmail account card */
+.gmail-acct-card{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:var(--radius);background:var(--surface2);margin-bottom:.5rem;border:1px solid var(--border)}
+.gmail-acct-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#0f1117;flex-shrink:0}
+.gmail-acct-info{flex:1;min-width:0}
+.gmail-acct-email{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmail-acct-status{font-size:.72rem;color:var(--text3);margin-top:1px}
+/* Recurring form section */
+.rec-section{background:var(--surface2);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:1rem;border:1px solid var(--border)}
+.rec-toggle{display:flex;align-items:center;gap:.6rem;cursor:pointer;user-select:none}
+.rec-toggle input[type=checkbox]{accent-color:var(--accent2);width:16px;height:16px;cursor:pointer}
+.rec-toggle-label{font-size:.85rem;font-weight:600;color:var(--text2)}
+.rec-freq-row{display:none;margin-top:.75rem;gap:.5rem;flex-wrap:wrap}
+.rec-freq-row.show{display:flex}
+.rec-freq-btn{padding:.3rem .8rem;border-radius:6px;border:1px solid var(--border);background:var(--surface3);color:var(--text2);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s}
+.rec-freq-btn.active{border-color:var(--accent2);background:rgba(129,140,248,.15);color:var(--accent2)}
+/* Forecast recurring section */
+.rec-upcoming-item{display:flex;align-items:center;gap:1rem;padding:.85rem 1rem;border-radius:var(--radius);background:var(--surface2);margin-bottom:.5rem;border-left:3px solid var(--accent2)}
+.rec-upcoming-badge{font-size:.65rem;font-weight:600;padding:.2rem .55rem;border-radius:999px;background:rgba(129,140,248,.15);color:var(--accent2)}
 
 /* === FORM === */
 .form-group{margin-bottom:1.25rem}
@@ -113,6 +140,15 @@ input,select,textarea{font-family:inherit}
 .reminder-name{font-weight:600;font-size:.9rem}
 .reminder-detail{font-size:.78rem;color:var(--text3)}
 .reminder-amount{font-weight:700;font-size:1rem;color:var(--amber)}
+.reminder-actions{display:flex;gap:.4rem;margin-left:.75rem;flex-shrink:0}
+.reminder-action-btn{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:.35rem .55rem;font-size:.85rem;transition:all .15s;display:inline-flex;align-items:center;gap:.3rem;cursor:pointer}
+.reminder-action-btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(251,191,36,.06)}
+.notify-menu-item{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;font-size:.85rem;color:var(--text2);border:none;background:none;width:100%;text-align:left;transition:background .15s;border-radius:8px;cursor:pointer}
+.notify-menu-item:hover{background:rgba(56,189,248,.06);color:var(--text)}
+.notify-menu-item .nmi-icon{font-size:1.2rem;width:24px;text-align:center;flex-shrink:0}
+.notify-menu-item .nmi-sub{font-size:.72rem;color:var(--text3);margin-top:.1rem}
+.notify-banner{background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.06));border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:1rem}
+.notify-banner-text{flex:1;font-size:.85rem;color:var(--text2)}
 
 /* === INSIGHT === */
 .insight-item{display:flex;gap:1rem;padding:1rem;border-radius:var(--radius);background:var(--surface2);margin-bottom:.65rem}
@@ -269,6 +305,15 @@ input,select,textarea{font-family:inherit}
         </select>
         <select class="form-input" id="txFilterCat" onchange="renderTransactions()"></select>
         <select class="form-input" id="txFilterAcct" onchange="renderTransactions()"></select>
+        <select class="form-input" id="txFilterRecurring" onchange="renderTransactions()">
+          <option value="all">All Frequency</option>
+          <option value="recurring">Recurring Only</option>
+          <option value="weekly">&#x1F501; Weekly</option>
+          <option value="monthly">&#x1F4C5; Monthly</option>
+          <option value="quarterly">&#x1F4CA; Quarterly</option>
+          <option value="half-yearly">&#x1F6E1;&#xFE0F; Half-Yearly</option>
+          <option value="yearly">&#x1F4C6; Yearly</option>
+        </select>
         <select class="form-input" id="txSort" onchange="renderTransactions()">
           <option value="date-desc">Newest First</option>
           <option value="date-asc">Oldest First</option>
@@ -312,6 +357,11 @@ input,select,textarea{font-family:inherit}
 
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
+      <!-- Origin warning -->
+      <div id="originWarn" class="notify-banner" style="border-color:rgba(251,191,36,.3);background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(251,191,36,.03));display:none;margin-bottom:1.25rem">
+        <span style="font-size:1.3rem">&#9888;&#65039;</span>
+        <div class="notify-banner-text"><strong>Gmail won't work from file://</strong> — open this app via a local server (e.g. <code>npx serve .</code> or VS Code Live Server) so Google OAuth accepts the origin.</div>
+      </div>
       <div class="card" style="max-width:600px">
         <div class="card-title">Google OAuth Settings</div>
         <div class="form-group">
@@ -326,10 +376,10 @@ input,select,textarea{font-family:inherit}
         <button class="btn btn-primary" onclick="saveAppSettings()">Save Settings</button>
       </div>
       <div class="card" style="max-width:600px;margin-top:1.25rem">
-        <div class="card-title">Gmail Connection</div>
-        <div id="gmailConnStatus">
-          <div style="color:var(--text3);font-size:.85rem">Not connected. Configure Client ID above first.</div>
-        </div>
+        <div class="card-title">&#128231; Gmail Accounts</div>
+        <div id="gmailAccountsList" style="margin-bottom:1rem"></div>
+        <button class="btn btn-ghost btn-sm" id="addGmailAccountBtn" onclick="addGmailAccount()" style="display:none">&#43; Add Gmail Account</button>
+        <div id="gmailClientIdNeeded" style="color:var(--text3);font-size:.85rem">Configure Client ID above and Save first.</div>
       </div>
       <div class="card" style="max-width:600px;margin-top:1.25rem">
         <div class="card-title">Data</div>
@@ -395,6 +445,20 @@ input,select,textarea{font-family:inherit}
           <input type="text" class="form-input" id="addAccNum" placeholder="e.g. XX1234" maxlength="10">
         </div>
       </div>
+      <div class="rec-section">
+        <label class="rec-toggle">
+          <input type="checkbox" id="addIsRecurring" onchange="toggleRecurringFreq()">
+          <span class="rec-toggle-label">&#128257; Mark as Recurring Transaction</span>
+        </label>
+        <div class="rec-freq-row" id="recFreqRow">
+          <button type="button" class="rec-freq-btn" data-freq="weekly" onclick="setRecFreq('weekly')">Weekly</button>
+          <button type="button" class="rec-freq-btn" data-freq="monthly" onclick="setRecFreq('monthly')">Monthly</button>
+          <button type="button" class="rec-freq-btn" data-freq="quarterly" onclick="setRecFreq('quarterly')">Quarterly</button>
+          <button type="button" class="rec-freq-btn" data-freq="half-yearly" onclick="setRecFreq('half-yearly')">Half-Yearly</button>
+          <button type="button" class="rec-freq-btn" data-freq="yearly" onclick="setRecFreq('yearly')">Yearly</button>
+        </div>
+        <div id="recFreqHint" style="font-size:.72rem;color:var(--text3);margin-top:.5rem;display:none">This helps predict future expenses and generate reminders.</div>
+      </div>
       <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:.5rem">
         <button type="button" class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">Add Transaction</button>
@@ -433,34 +497,78 @@ input,select,textarea{font-family:inherit}
 
 <!-- GMAIL IMPORT MODAL -->
 <div class="modal-overlay" id="gmailModal">
-  <div class="modal" style="max-width:650px">
+  <div class="modal" style="max-width:680px">
     <div class="modal-header">
-      <div class="modal-title">Import from Gmail</div>
+      <div class="modal-title">&#128231; Import from Gmail</div>
       <button class="modal-close" onclick="closeGmailModal()">&times;</button>
     </div>
+    <!-- Account selector -->
     <div class="form-group">
-      <label class="form-label">Search for bank emails from the last</label>
-      <select class="form-input" id="gmailSearchDays" style="width:auto">
-        <option value="7">7 days</option>
-        <option value="30" selected>30 days</option>
-        <option value="90">90 days</option>
-        <option value="180">6 months</option>
-      </select>
+      <label class="form-label">Gmail Account</label>
+      <select class="form-input" id="gmailAccountSelect" style="width:auto;min-width:260px"></select>
     </div>
-    <div style="margin-bottom:1rem">
-      <button class="btn btn-primary" onclick="fetchGmailTransactions()" id="gmailFetchBtn">Fetch Emails</button>
+    <div class="form-row" style="margin-bottom:1rem">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Search emails from last</label>
+        <select class="form-input" id="gmailSearchDays">
+          <option value="7">7 days</option>
+          <option value="30" selected>30 days</option>
+          <option value="90">90 days</option>
+          <option value="180">6 months</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0;display:flex;align-items:flex-end">
+        <button class="btn btn-primary" onclick="fetchGmailTransactions()" id="gmailFetchBtn">&#128270; Fetch Emails</button>
+      </div>
     </div>
-    <div id="gmailProgress" style="display:none">
+    <div id="gmailProgress" style="display:none;margin-bottom:1rem">
       <div style="font-size:.85rem;color:var(--text2)" id="gmailProgressText">Searching...</div>
       <div class="confidence-bar" style="margin-top:.5rem"><div class="confidence-fill" id="gmailProgressBar" style="width:0%;transition:width .3s"></div></div>
     </div>
     <div id="gmailPreview" style="display:none;margin-top:1rem">
-      <div class="card-title" style="margin-bottom:.75rem">Found <span id="gmailFoundCount">0</span> transactions</div>
-      <div id="gmailParsedList" style="max-height:300px;overflow-y:auto"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem">
+        <div class="card-title" style="margin-bottom:0">Found <span id="gmailFoundCount">0</span> transactions &bull; <span id="gmailDupCount" style="color:var(--amber)">0 possible duplicates</span></div>
+        <label style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="gmailSkipDups" checked style="accent-color:var(--accent2)"> Skip duplicates on import
+        </label>
+      </div>
+      <div id="gmailParsedList" style="max-height:320px;overflow-y:auto"></div>
     </div>
     <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
       <button type="button" class="btn btn-outline" onclick="closeGmailModal()">Cancel</button>
-      <button type="button" class="btn btn-primary" id="gmailImportBtn" onclick="importGmailTransactions()" disabled>Import All</button>
+      <button type="button" class="btn btn-primary" id="gmailImportBtn" onclick="importGmailTransactions()" disabled>Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- REMINDER NOTIFY MODAL -->
+<div class="modal-overlay" id="notifyModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">&#128276; Send Reminder</div>
+      <button class="modal-close" onclick="closeNotifyModal()">&times;</button>
+    </div>
+    <div id="notifyReminderSummary" style="background:var(--surface2);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem"></div>
+    <div style="display:flex;flex-direction:column;gap:.35rem">
+      <button class="notify-menu-item" onclick="notifyViaBrowser()" id="notifyBrowserBtn">
+        <span class="nmi-icon">&#128276;</span>
+        <div><div>Browser Notification</div><div class="nmi-sub">Shows a native OS notification now</div></div>
+      </button>
+      <button class="notify-menu-item" onclick="notifyViaEmail()">
+        <span class="nmi-icon">&#128231;</span>
+        <div><div>Send via Email</div><div class="nmi-sub">Opens your email client with details</div></div>
+      </button>
+      <button class="notify-menu-item" onclick="notifyViaShare()" id="notifyShareBtn">
+        <span class="nmi-icon">&#128228;</span>
+        <div><div>Share (WhatsApp, SMS...)</div><div class="nmi-sub">Send via any app on your device</div></div>
+      </button>
+      <button class="notify-menu-item" onclick="notifyViaCalendar()">
+        <span class="nmi-icon">&#128197;</span>
+        <div><div>Add to Google Calendar</div><div class="nmi-sub">Get notified at the scheduled time</div></div>
+      </button>
+    </div>
+    <div style="margin-top:1.25rem;text-align:right">
+      <button class="btn btn-outline btn-sm" onclick="closeNotifyModal()">Close</button>
     </div>
   </div>
 </div>
@@ -508,10 +616,28 @@ const CAT_RULES = [
   {cat:'transfer',kw:['transfer','upi','neft','rtgs','imps','self transfer','sent to']},
 ];
 
+// Keywords that suggest recurring + their default frequency
+const RECURRING_HINTS = [
+  {kw:['emi','home loan','car loan','personal loan'],freq:'monthly'},
+  {kw:['sip','mutual fund','ppf','nps','rd '],freq:'monthly'},
+  {kw:['insurance','lic','premium','health insurance'],freq:'yearly'},
+  {kw:['rent','house rent'],freq:'monthly'},
+  {kw:['electricity','electric bill','water bill','internet','broadband','wifi'],freq:'monthly'},
+  {kw:['netflix','spotify','hotstar','prime','youtube premium'],freq:'monthly'},
+  {kw:['gym','fitness','membership'],freq:'monthly'},
+  {kw:['salary','payroll'],freq:'monthly'},
+];
+
 function autoCategory(desc){
   const d=desc.toLowerCase();
   for(const rule of CAT_RULES){if(rule.kw.some(k=>d.includes(k)))return rule.cat;}
   return 'other';
+}
+
+function suggestRecurring(desc){
+  const d=desc.toLowerCase();
+  for(const hint of RECURRING_HINTS){if(hint.kw.some(k=>d.includes(k)))return hint.freq;}
+  return null;
 }
 
 // ============================================================
@@ -535,14 +661,13 @@ const BankMessageParser = {
     if(m&&!skip.test(m[1].trim()))return m[1].trim();
     const m2=t.match(this.INFO_PAT);
     if(m2&&!skip.test(m2[1].trim()))return m2[1].trim();
-    // Try UPI merchant: UPI/MerchantName
     const upi=t.match(/UPI\/([A-Za-z0-9\s&.'\-]+)/i);
     if(upi)return upi[1].trim();
     return '';
   },
   detectBank(t){const l=t.toLowerCase();for(const[k,v]of Object.entries(this.BANK_MAP)){if(l.includes(k))return v;}return 'Bank';},
 
-  parseMessage(text, sender){
+  parseMessage(text, sender, gmailMsgId){
     const amount=this.parseAmount(text);
     if(!amount||amount<=0)return null;
     const type=this.parseType(text);
@@ -551,11 +676,16 @@ const BankMessageParser = {
     const bank=sender?this.detectBank(sender):this.detectBank(text);
     const description=merchant||(type==='credit'?'Bank Credit':'Bank Debit');
     const category=autoCategory(description);
-    return{
-      id:crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
-      date:new Date().toISOString().split('T')[0],
-      description,amount,type,category,bank,accountNumber,isRecurring:false
+    const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
+    const tx={
+      id, date:new Date().toISOString().split('T')[0],
+      description,amount,type,category,bank,accountNumber,
+      isRecurring:false, recurringType:null, recurringGroupId:null,
+      source:'sms', fingerprint:''
     };
+    if(gmailMsgId)tx.gmailMsgId=gmailMsgId;
+    tx.fingerprint=computeFingerprint(tx);
+    return tx;
   }
 };
 
@@ -611,18 +741,29 @@ const LS_KEY='wisespender_txns';
 const SETTINGS_KEY='wisespender_settings';
 
 function save(){localStorage.setItem(LS_KEY,JSON.stringify(transactions));}
-function load(){try{transactions=JSON.parse(localStorage.getItem(LS_KEY))||[];}catch(e){transactions=[];}}
+function load(){try{transactions=JSON.parse(localStorage.getItem(LS_KEY))||[];}catch(e){transactions=[];}
+  // Backfill fingerprints for old transactions that don't have them
+  transactions.forEach(t=>{if(!t.fingerprint)t.fingerprint=computeFingerprint(t);});
+}
 function loadAppSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{};}catch(e){return {};}}
 function saveAppSettings(){
   const s=loadAppSettings();
   s.googleClientId=document.getElementById('googleClientId').value.trim();
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
   showToast('Settings saved','success');
-  initGoogleAuth();
+  refreshGoogleAuth();
 }
 
 // ============================================================
-// ACCOUNTS (fixed realistic accounts for test data)
+// FINGERPRINT (for dedup)
+// ============================================================
+function computeFingerprint(tx){
+  const normDesc=(tx.description||'').toLowerCase().replace(/\s+/g,'').slice(0,14);
+  return `${tx.date}_${Math.round(tx.amount)}_${normDesc}`;
+}
+
+// ============================================================
+// ACCOUNTS
 // ============================================================
 const ACCOUNTS = [
   {id:'HDFC-SA-4521', bank:'HDFC',  label:'Salary Account',  type:'salary',  badge:'Salary',      badgeColor:'var(--green)',  cats:['salary']},
@@ -634,7 +775,6 @@ const ACCOUNTS = [
 const ACCT_BY_CAT = {};
 ACCOUNTS.forEach(a=>a.cats.forEach(c=>{ACCT_BY_CAT[c]=a;}));
 const ACCT_MAP = Object.fromEntries(ACCOUNTS.map(a=>[a.id,a]));
-
 function getAccountForCategory(cat){return ACCT_BY_CAT[cat]||ACCOUNTS[4];}
 
 // ============================================================
@@ -645,7 +785,7 @@ function generateTestData(){
   const descs={
     salary:['Monthly Salary Credit','Freelance Payment','Consulting Fee','Bonus Credit'],
     rent:['House Rent Payment','Electricity Bill','Internet Bill - Jio Fiber','Society Maintenance','Gas Bill'],
-    food:['Swiggy Order','Zomato Food Delivery','Dominos Pizza','Starbucks Coffee','Restaurant Dinner','McDonald\'s','KFC Order'],
+    food:['Swiggy Order','Zomato Food Delivery','Dominos Pizza','Starbucks Coffee','Restaurant Dinner',"McDonald's",'KFC Order'],
     groceries:['BigBasket Order','Blinkit Grocery','DMart Purchase','Zepto Delivery','Instamart Vegetables'],
     transport:['Uber Ride','Ola Cab','Metro Recharge','Petrol - HP Pump','Rapido Auto','Parking Fee'],
     shopping:['Amazon Purchase','Flipkart Order','Myntra Fashion','Ajio Clothing','Mobile Phone Purchase'],
@@ -659,50 +799,59 @@ function generateTestData(){
   };
   const ranges={salary:[45000,120000],rent:[2000,25000],food:[100,2500],groceries:[200,5000],transport:[50,3000],shopping:[300,15000],health:[100,8000],entertainment:[99,999],education:[500,10000],travel:[2000,30000],insurance:[1000,15000],investment:[1000,25000],transfer:[500,20000]};
 
+  // Fixed recurring group IDs for test data
+  const recGroups={
+    rent: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    internet: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    entertainment: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    insurance: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    investment: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    salary: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    gym: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+  };
+
   for(let m=5;m>=0;m--){
     const month=new Date(now.getFullYear(),now.getMonth()-m,1);
-    // Salary — always 1 main + sometimes 1 freelance
-    txns.push(mkTx(month,'salary','credit',descs,ranges));
-    if(Math.random()>0.5)txns.push(mkTx(month,'salary','credit',descs,ranges));
-    // Fixed monthly: rent, entertainment sub, insurance EMI
-    txns.push(mkTx(month,'rent','debit',descs,ranges));
-    txns.push(mkTx(month,'rent','debit',descs,ranges));
-    txns.push(mkTx(month,'entertainment','debit',descs,ranges));
-    txns.push(mkTx(month,'insurance','debit',descs,ranges));
-    // Food (credit card) 5-10
-    for(let i=0;i<5+Math.floor(Math.random()*6);i++)txns.push(mkTx(month,'food','debit',descs,ranges));
-    // Groceries (kotak) 2-4
-    for(let i=0;i<2+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'groceries','debit',descs,ranges));
-    // Transport (kotak) 3-6
-    for(let i=0;i<3+Math.floor(Math.random()*4);i++)txns.push(mkTx(month,'transport','debit',descs,ranges));
-    // Shopping (credit card) 1-3
-    for(let i=0;i<1+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'shopping','debit',descs,ranges));
-    // Investment (SBI) monthly SIP
-    txns.push(mkTx(month,'investment','debit',descs,ranges));
-    // Occasional: health, education, travel, transfer
+    // Salary — monthly recurring
+    txns.push(mkTx(month,'salary','credit',descs,ranges,'monthly',recGroups.salary,'Monthly Salary Credit'));
+    if(Math.random()>0.5)txns.push(mkTx(month,'salary','credit',descs,ranges,null,null,null));
+    // Fixed monthly recurring
+    txns.push(mkTx(month,'rent','debit',descs,ranges,'monthly',recGroups.rent,'House Rent Payment'));
+    txns.push(mkTx(month,'rent','debit',descs,ranges,'monthly',recGroups.internet,'Internet Bill - Jio Fiber'));
+    txns.push(mkTx(month,'entertainment','debit',descs,ranges,'monthly',recGroups.entertainment,'Netflix Subscription'));
+    txns.push(mkTx(month,'investment','debit',descs,ranges,'monthly',recGroups.investment,'SIP - Mutual Fund'));
+    txns.push(mkTx(month,'health','debit',descs,ranges,'monthly',recGroups.gym,'Gym Membership'));
+    // Half-yearly insurance
+    if(m%6===0||m===5)txns.push(mkTx(month,'insurance','debit',descs,ranges,'half-yearly',recGroups.insurance,'LIC Premium'));
+    // Variable
+    for(let i=0;i<5+Math.floor(Math.random()*6);i++)txns.push(mkTx(month,'food','debit',descs,ranges,null,null,null));
+    for(let i=0;i<2+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'groceries','debit',descs,ranges,null,null,null));
+    for(let i=0;i<3+Math.floor(Math.random()*4);i++)txns.push(mkTx(month,'transport','debit',descs,ranges,null,null,null));
+    for(let i=0;i<1+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'shopping','debit',descs,ranges,null,null,null));
     const oth=['health','education','travel','transfer'];
-    for(let i=0;i<1+Math.floor(Math.random()*2);i++){txns.push(mkTx(month,oth[Math.floor(Math.random()*oth.length)],'debit',descs,ranges));}
+    for(let i=0;i<1+Math.floor(Math.random()*2);i++){txns.push(mkTx(month,oth[Math.floor(Math.random()*oth.length)],'debit',descs,ranges,null,null,null));}
   }
   txns.sort((a,b)=>new Date(b.date)-new Date(a.date));
   return txns;
 }
 
-function mkTx(month,cat,type,descs,ranges){
+function mkTx(month,cat,type,descs,ranges,recurringType,recurringGroupId,fixedDesc){
   const d=descs[cat]||['Misc'];const r=ranges[cat]||[100,5000];
   const day=1+Math.floor(Math.random()*27);
   const date=new Date(month.getFullYear(),month.getMonth(),day);
   const acct=getAccountForCategory(cat);
-  return{
+  const description=fixedDesc||d[Math.floor(Math.random()*d.length)];
+  const tx={
     id:crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     date:date.toISOString().split('T')[0],
-    description:d[Math.floor(Math.random()*d.length)],
-    amount:+(r[0]+Math.random()*(r[1]-r[0])).toFixed(2),
-    type,category:cat,
-    bank:acct.bank,
-    accountNumber:acct.id,
-    accountLabel:acct.label,
-    isRecurring:false
+    description, amount:+(r[0]+Math.random()*(r[1]-r[0])).toFixed(2),
+    type, category:cat,
+    bank:acct.bank, accountNumber:acct.id, accountLabel:acct.label,
+    isRecurring:!!recurringType, recurringType:recurringType||null,
+    recurringGroupId:recurringGroupId||null, source:'manual', fingerprint:''
   };
+  tx.fingerprint=computeFingerprint(tx);
+  return tx;
 }
 
 // ============================================================
@@ -716,42 +865,141 @@ function computeAnalytics(txns){
   debits.forEach(t=>{byCat[t.category]=(byCat[t.category]||0)+t.amount;});
   const catBreakdown=Object.entries(byCat).map(([id,amount])=>({...CAT_MAP[id],amount,pct:totalExpense>0?(amount/totalExpense*100):0})).sort((a,b)=>b.amount-a.amount);
   const byMonth={};
-  txns.forEach(t=>{const mk=t.date.slice(0,7);if(!byMonth[mk])byMonth[mk]={income:0,expense:0};if(t.type==='credit')byMonth[mk].income+=t.amount;else byMonth[mk].expense+=t.amount;});
+  txns.forEach(t=>{const mk=t.date.slice(0,7);if(!byMonth[mk])byMonth[mk]={income:0,expense:0,recurringExpense:0};if(t.type==='credit')byMonth[mk].income+=t.amount;else{byMonth[mk].expense+=t.amount;if(t.isRecurring)byMonth[mk].recurringExpense+=t.amount;}});
   const months=Object.entries(byMonth).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>({month:k,...v,net:v.income-v.expense}));
   return{totalExpense,totalIncome,net,savingsRate,catBreakdown,months,count:txns.length};
 }
 
-function detectRecurring(txns){
-  const groups={};
-  txns.forEach(t=>{const k=t.description.toLowerCase().trim();if(!groups[k])groups[k]=[];groups[k].push(t);});
-  const rd=new Set();
-  Object.entries(groups).forEach(([k,arr])=>{if(arr.length>=2){const ms=new Set(arr.map(t=>t.date.slice(0,7)));if(ms.size>=2)rd.add(k);}});
-  txns.forEach(t=>{t.isRecurring=rd.has(t.description.toLowerCase().trim());});
+// ============================================================
+// RECURRING DETECTION — interval-based frequency typing
+// ============================================================
+const FREQ_INTERVALS={weekly:[6,8],monthly:[28,32],quarterly:[88,95],'half-yearly':[175,190],yearly:[360,370]};
+
+function intervalToFreq(days){
+  for(const[freq,[lo,hi]]of Object.entries(FREQ_INTERVALS)){if(days>=lo&&days<=hi)return freq;}
+  return null;
 }
 
+function detectRecurring(txns){
+  // Group by normalized description
+  const groups={};
+  txns.forEach(t=>{const k=t.description.toLowerCase().trim();if(!groups[k])groups[k]=[];groups[k].push(t);});
+
+  // Build group ID map (desc → groupId) for automatic detection only
+  const autoGroupIds={};
+
+  Object.entries(groups).forEach(([k,arr])=>{
+    if(arr.length<2)return;
+    const months=new Set(arr.map(t=>t.date.slice(0,7)));
+    if(months.size<2)return;
+
+    // Sort by date and compute intervals
+    const sorted=[...arr].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const intervals=[];
+    for(let i=1;i<sorted.length;i++){
+      const diff=(new Date(sorted[i].date)-new Date(sorted[i-1].date))/(1000*86400);
+      if(diff>0)intervals.push(diff);
+    }
+    if(!intervals.length)return;
+    const medianInterval=intervals.sort((a,b)=>a-b)[Math.floor(intervals.length/2)];
+    const detectedFreq=intervalToFreq(medianInterval);
+
+    // Assign group ID
+    if(!autoGroupIds[k])autoGroupIds[k]=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
+    const gid=autoGroupIds[k];
+
+    arr.forEach(t=>{
+      t.isRecurring=true;
+      // Don't overwrite manually set values
+      if(!t.recurringType)t.recurringType=detectedFreq;
+      if(!t.recurringGroupId)t.recurringGroupId=gid;
+    });
+  });
+}
+
+// ============================================================
+// FORECAST — separates recurring fixed costs from variable
+// ============================================================
 function forecastNextMonth(txns){
   const a=computeAnalytics(txns);if(a.months.length<2)return null;
-  const ms=a.months;let wS=0,wT=0,wI=0;
-  ms.forEach((m,i)=>{const w=i+1;wS+=m.expense*w;wI+=m.income*w;wT+=w;});
-  const pE=wS/wT,pI=wI/wT;
+  const ms=a.months;
+
+  // Weighted average for variable and income
+  let wVarS=0,wI=0,wT=0;
+  ms.forEach((m,i)=>{const w=i+1;wVarS+=(m.expense-m.recurringExpense)*w;wI+=m.income*w;wT+=w;});
+  const pVarE=wVarS/wT, pI=wI/wT;
+
+  // Recurring next-due prediction per group
+  const recGroups={};
+  txns.filter(t=>t.isRecurring&&t.type==='debit'&&t.recurringGroupId).forEach(t=>{
+    const g=t.recurringGroupId;
+    if(!recGroups[g])recGroups[g]={desc:t.description,cat:t.category,freq:t.recurringType,amounts:[],dates:[]};
+    recGroups[g].amounts.push(t.amount);
+    recGroups[g].dates.push(new Date(t.date));
+  });
+
+  const recUpcoming=Object.values(recGroups).map(g=>{
+    const avg=g.amounts.reduce((s,a)=>s+a,0)/g.amounts.length;
+    const last=new Date(Math.max(...g.dates.map(d=>d.getTime())));
+    // Compute next due based on frequency
+    const next=new Date(last);
+    if(g.freq==='weekly')next.setDate(next.getDate()+7);
+    else if(g.freq==='monthly')next.setMonth(next.getMonth()+1);
+    else if(g.freq==='quarterly')next.setMonth(next.getMonth()+3);
+    else if(g.freq==='half-yearly')next.setMonth(next.getMonth()+6);
+    else if(g.freq==='yearly')next.setFullYear(next.getFullYear()+1);
+    else next.setMonth(next.getMonth()+1); // fallback
+    return{...g,avg,last,next,occurrences:g.amounts.length};
+  }).sort((a,b)=>a.next-b.next);
+
+  const totalRecurringMonthly=recUpcoming.reduce((s,r)=>{
+    // Monthly-equivalent of each recurring payment
+    const multMap={'weekly':4.33,'monthly':1,'quarterly':1/3,'half-yearly':1/6,'yearly':1/12};
+    return s+r.avg*(multMap[r.freq]||1);
+  },0);
+
+  const pE=pVarE+totalRecurringMonthly;
+
   const catForecast={};
   a.catBreakdown.forEach(c=>{catForecast[c.id]={name:c.name,color:c.color,amount:pE*(c.pct/100)};});
+
   let trend='stable';
   if(ms.length>=3){const r=ms.slice(-2).reduce((s,m)=>s+m.expense,0)/2;const o=ms.slice(0,-2).reduce((s,m)=>s+m.expense,0)/Math.max(1,ms.length-2);if(r>o*1.1)trend='increasing';else if(r<o*.9)trend='decreasing';}
   const confidence=ms.length>=6?85:ms.length>=4?70:55;
-  return{predictedExpense:pE,predictedIncome:pI,catForecast,trend,confidence,monthCount:ms.length};
+  return{predictedExpense:pE,predictedIncome:pI,predictedRecurring:totalRecurringMonthly,predictedVariable:pVarE,catForecast,trend,confidence,monthCount:ms.length,recUpcoming};
 }
 
 function getPaymentReminders(txns){
-  const rec=txns.filter(t=>t.isRecurring&&t.type==='debit');
+  // Use recurring group IDs
   const groups={};
-  rec.forEach(t=>{const k=t.description.toLowerCase().trim();if(!groups[k])groups[k]={desc:t.description,cat:t.category,amounts:[],dates:[]};groups[k].amounts.push(t.amount);groups[k].dates.push(new Date(t.date));});
+  txns.filter(t=>t.isRecurring&&t.type==='debit'&&t.recurringGroupId).forEach(t=>{
+    const g=t.recurringGroupId;
+    if(!groups[g])groups[g]={desc:t.description,cat:t.category,freq:t.recurringType,amounts:[],dates:[]};
+    groups[g].amounts.push(t.amount);
+    groups[g].dates.push(new Date(t.date));
+  });
+
+  // Fallback: description-based groups without groupId
+  txns.filter(t=>t.isRecurring&&t.type==='debit'&&!t.recurringGroupId).forEach(t=>{
+    const k='desc:'+t.description.toLowerCase().trim();
+    if(!groups[k])groups[k]={desc:t.description,cat:t.category,freq:t.recurringType,amounts:[],dates:[]};
+    groups[k].amounts.push(t.amount);
+    groups[k].dates.push(new Date(t.date));
+  });
+
   return Object.values(groups).map(g=>{
     const avg=g.amounts.reduce((s,a)=>s+a,0)/g.amounts.length;
     const last=new Date(Math.max(...g.dates.map(d=>d.getTime())));
-    const next=new Date(last);next.setMonth(next.getMonth()+1);
-    return{description:g.desc,category:g.cat,expectedAmount:avg,nextDate:next,occurrences:g.amounts.length};
-  }).filter(r=>r.occurrences>=2).sort((a,b)=>a.nextDate-b.nextDate);
+    const next=new Date(last);
+    const freq=g.freq||'monthly';
+    if(freq==='weekly')next.setDate(next.getDate()+7);
+    else if(freq==='monthly')next.setMonth(next.getMonth()+1);
+    else if(freq==='quarterly')next.setMonth(next.getMonth()+3);
+    else if(freq==='half-yearly')next.setMonth(next.getMonth()+6);
+    else if(freq==='yearly')next.setFullYear(next.getFullYear()+1);
+    else next.setMonth(next.getMonth()+1);
+    return{description:g.desc,category:g.cat,freq,expectedAmount:avg,nextDate:next,occurrences:g.amounts.length,last};
+  }).filter(r=>r.occurrences>=1).sort((a,b)=>a.nextDate-b.nextDate);
 }
 
 function detectAnomalies(txns){
@@ -770,7 +1018,12 @@ function generateInsights(txns){
   const debits=txns.filter(t=>t.type==='debit');
   if(debits.length){ins.push({icon:'&#128178;',title:'Avg Transaction',desc:`Average expense is ${fmt(debits.reduce((s,t)=>s+t.amount,0)/debits.length)}.`});}
   const rc=txns.filter(t=>t.isRecurring&&t.type==='debit');
-  if(rc.length){ins.push({icon:'&#128257;',title:'Recurring',desc:`${rc.length} recurring transactions totaling ${fmt(rc.reduce((s,t)=>s+t.amount,0))}.`});}
+  if(rc.length){
+    const freqGroups={};
+    rc.forEach(t=>{const f=t.recurringType||'monthly';if(!freqGroups[f])freqGroups[f]=0;freqGroups[f]++;});
+    const fStr=Object.entries(freqGroups).map(([f,n])=>`${n} ${f}`).join(', ');
+    ins.push({icon:'&#128257;',title:'Recurring Expenses',desc:`${rc.length} recurring transactions (${fStr}) totaling ${fmt(rc.reduce((s,t)=>s+t.amount,0))} all-time.`});
+  }
   const an=detectAnomalies(txns);
   if(an.length){ins.push({icon:'&#9888;&#65039;',title:'Anomalies',desc:`${an.length} unusually high transactions. Top: ${an[0].tx.description} (${fmt(an[0].tx.amount)}).`});}
   if(a.months.length>=2){const l=a.months[a.months.length-1],p=a.months[a.months.length-2];const ch=p.expense>0?((l.expense-p.expense)/p.expense*100):0;ins.push({icon:ch>0?'&#128200;':'&#128201;',title:'Month-over-Month',desc:`Spending ${ch>0?'increased':'decreased'} by ${Math.abs(ch).toFixed(1)}% vs previous month.`});}
@@ -802,65 +1055,31 @@ function svgBarChart(months){
   const maxV=Math.max(...months.map(m=>Math.max(m.income,m.expense)),1);
   const chartH=H-TOP-BOT,chartW=W-PAD;
   const groupW=chartW/months.length,barW=groupW*0.3,gap=groupW*0.05;
-
-  // Grid lines
   const gridLines=[];
-  for(let i=0;i<=4;i++){
-    const y=TOP+chartH-(chartH*i/4);
-    const val=fmt(maxV*i/4);
-    gridLines.push(`<line x1="${PAD}" y1="${y}" x2="${W}" y2="${y}" stroke="var(--border)" stroke-width="1"/><text x="${PAD-4}" y="${y+3}" text-anchor="end" fill="var(--text3)" font-size="9">${val}</text>`);
-  }
-
-  const bars=months.map((m,i)=>{
-    const x=PAD+i*groupW+groupW*0.15;
-    const incH=(m.income/maxV)*chartH,expH=(m.expense/maxV)*chartH;
-    const lbl=monthLabel(m.month);
-    return `<rect x="${x}" y="${TOP+chartH-incH}" width="${barW}" height="${incH}" fill="var(--green)" rx="3" class="bar-rect" onmouseover="showTip(event,'${lbl} Income: ${fmt(m.income)}')" onmouseout="hideTip()"/><rect x="${x+barW+gap}" y="${TOP+chartH-expH}" width="${barW}" height="${expH}" fill="var(--red)" rx="3" class="bar-rect" onmouseover="showTip(event,'${lbl} Expense: ${fmt(m.expense)}')" onmouseout="hideTip()"/><text x="${x+barW+gap/2}" y="${H-5}" text-anchor="middle" fill="var(--text3)" font-size="9">${lbl}</text>`;
-  }).join('');
-
-  return `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" preserveAspectRatio="xMidYMid meet">${gridLines.join('')}${bars}<circle cx="${PAD+10}" cy="${H-5}" r="4" fill="var(--green)"/><text x="${PAD+18}" y="${H-2}" fill="var(--text3)" font-size="8">Income</text><circle cx="${PAD+70}" cy="${H-5}" r="4" fill="var(--red)"/><text x="${PAD+78}" y="${H-2}" fill="var(--text3)" font-size="8">Expense</text></svg>`;
+  for(let i=0;i<=4;i++){const y=TOP+chartH-(chartH*i/4);const val=fmt(maxV*i/4);gridLines.push(`<line x1="${PAD}" y1="${y}" x2="${W}" y2="${y}" stroke="var(--border)" stroke-width="1"/><text x="${PAD-4}" y="${y+3}" text-anchor="end" fill="var(--text3)" font-size="9">${val}</text>`);}
+  const bars=months.map((m,i)=>{const x=PAD+i*groupW+groupW*0.15;const incH=(m.income/maxV)*chartH,expH=(m.expense/maxV)*chartH;const recH=(m.recurringExpense/maxV)*chartH;const lbl=monthLabel(m.month);return `<rect x="${x}" y="${TOP+chartH-incH}" width="${barW}" height="${incH}" fill="var(--green)" rx="3" class="bar-rect" onmouseover="showTip(event,'${lbl} Income: ${fmt(m.income)}')" onmouseout="hideTip()"/><rect x="${x+barW+gap}" y="${TOP+chartH-expH}" width="${barW}" height="${expH}" fill="var(--red)" rx="3" class="bar-rect" onmouseover="showTip(event,'${lbl} Expense: ${fmt(m.expense)} (Recurring: ${fmt(m.recurringExpense||0)})')" onmouseout="hideTip()"/>${recH>0?`<rect x="${x+barW+gap}" y="${TOP+chartH-recH}" width="${barW}" height="${recH}" fill="var(--accent2)" rx="3" opacity="0.5"/>`:''}<text x="${x+barW+gap/2}" y="${H-5}" text-anchor="middle" fill="var(--text3)" font-size="9">${lbl}</text>`;}).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" preserveAspectRatio="xMidYMid meet">${gridLines.join('')}${bars}<circle cx="${PAD+10}" cy="${H-5}" r="4" fill="var(--green)"/><text x="${PAD+18}" y="${H-2}" fill="var(--text3)" font-size="8">Income</text><circle cx="${PAD+70}" cy="${H-5}" r="4" fill="var(--red)"/><text x="${PAD+78}" y="${H-2}" fill="var(--text3)" font-size="8">Expense</text><circle cx="${PAD+130}" cy="${H-5}" r="4" fill="var(--accent2)" opacity="0.7"/><text x="${PAD+138}" y="${H-2}" fill="var(--text3)" font-size="8">Recurring</text></svg>`;
 }
 
 function svgLineChart(txns){
   if(!txns.length)return '';
   const sorted=[...txns].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  // Aggregate daily balance
-  const daily={};
-  let bal=0;
+  const daily={};let bal=0;
   sorted.forEach(t=>{if(t.type==='credit')bal+=t.amount;else bal-=t.amount;daily[t.date]=bal;});
   const pts=Object.entries(daily).sort((a,b)=>a[0].localeCompare(b[0]));
   if(pts.length<2)return '';
-
   const W=600,H=180,PAD=50,TOP=15,BOT=25;
   const chartW=W-PAD-10,chartH=H-TOP-BOT;
   const vals=pts.map(p=>p[1]);
   const minV=Math.min(...vals,0),maxV=Math.max(...vals);
   const range=maxV-minV||1;
-
-  const points=pts.map((p,i)=>{
-    const x=PAD+(i/(pts.length-1))*chartW;
-    const y=TOP+chartH-((p[1]-minV)/range)*chartH;
-    return{x,y,date:p[0],val:p[1]};
-  });
-
+  const points=pts.map((p,i)=>{const x=PAD+(i/(pts.length-1))*chartW;const y=TOP+chartH-((p[1]-minV)/range)*chartH;return{x,y,date:p[0],val:p[1]};});
   const lineStr=points.map(p=>`${p.x},${p.y}`).join(' ');
   const areaStr=`${points[0].x},${TOP+chartH} ${lineStr} ${points[points.length-1].x},${TOP+chartH}`;
-
-  // Grid
-  const grid=[];
-  for(let i=0;i<=4;i++){
-    const y=TOP+chartH-(chartH*i/4);
-    const val=fmt(minV+range*i/4);
-    grid.push(`<line x1="${PAD}" y1="${y}" x2="${W-10}" y2="${y}" stroke="var(--border)"/><text x="${PAD-4}" y="${y+3}" text-anchor="end" fill="var(--text3)" font-size="9">${val}</text>`);
-  }
-
-  // Sample dots (every Nth)
+  const grid=[];for(let i=0;i<=4;i++){const y=TOP+chartH-(chartH*i/4);const val=fmt(minV+range*i/4);grid.push(`<line x1="${PAD}" y1="${y}" x2="${W-10}" y2="${y}" stroke="var(--border)"/><text x="${PAD-4}" y="${y+3}" text-anchor="end" fill="var(--text3)" font-size="9">${val}</text>`);}
   const step=Math.max(1,Math.floor(points.length/12));
   const dots=points.filter((_,i)=>i%step===0||i===points.length-1).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="var(--accent)" stroke="var(--bg)" stroke-width="1.5" class="line-dot" onmouseover="showTip(event,'${fmtDate(p.date)}: ${fmt(p.val)}')" onmouseout="hideTip()"/>`).join('');
-
-  // X labels
   const xLabels=points.filter((_,i)=>i%step===0||i===points.length-1).map(p=>`<text x="${p.x}" y="${H-5}" text-anchor="middle" fill="var(--text3)" font-size="8">${p.date.slice(5)}</text>`).join('');
-
   return `<svg viewBox="0 0 ${W} ${H}" class="chart-svg" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".25"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>${grid.join('')}<polygon points="${areaStr}" fill="url(#lg1)"/><polyline points="${lineStr}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>${dots}${xLabels}</svg>`;
 }
 
@@ -870,6 +1089,16 @@ function svgLineChart(txns){
 function fmt(n){return '₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function fmtDate(d){return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
 function monthLabel(mk){const[y,m]=mk.split('-');return new Date(y,m-1).toLocaleDateString('en-IN',{month:'short',year:'2-digit'});}
+
+const FREQ_LABELS={'weekly':'Weekly','monthly':'Monthly','quarterly':'Quarterly','half-yearly':'Half-Yearly','yearly':'Yearly'};
+const FREQ_CSS={'weekly':'tx-rec-weekly','monthly':'tx-rec-monthly','quarterly':'tx-rec-quarterly','half-yearly':'tx-rec-half-yearly','yearly':'tx-rec-yearly'};
+
+function recurringBadge(t){
+  if(!t.isRecurring)return '';
+  const cls=FREQ_CSS[t.recurringType]||'tx-rec-monthly';
+  const lbl=FREQ_LABELS[t.recurringType]||'Recurring';
+  return `<span class="tx-recurring ${cls}">${lbl}</span>`;
+}
 
 // ============================================================
 // RENDERING
@@ -898,28 +1127,20 @@ function renderDashboard(){
     document.getElementById('recentTx').innerHTML='';
     return;
   }
+  const recCount=transactions.filter(t=>t.isRecurring&&t.type==='debit').length;
   el.innerHTML=`
     <div class="metric"><div class="metric-label">&#128200; Total Income</div><div class="metric-value text-green">${fmt(a.totalIncome)}</div><div class="metric-sub">${transactions.filter(t=>t.type==='credit').length} credits</div></div>
     <div class="metric"><div class="metric-label">&#128201; Total Expenses</div><div class="metric-value text-red">${fmt(a.totalExpense)}</div><div class="metric-sub">${transactions.filter(t=>t.type==='debit').length} debits</div></div>
     <div class="metric"><div class="metric-label">&#128176; Net Balance</div><div class="metric-value ${a.net>=0?'text-green':'text-red'}">${a.net>=0?'+':''}${fmt(a.net)}</div><div class="metric-sub">${a.savingsRate.toFixed(1)}% savings rate</div></div>
-    <div class="metric"><div class="metric-label">&#128179; Transactions</div><div class="metric-value text-accent">${a.count}</div><div class="metric-sub">${a.catBreakdown.length} categories</div></div>`;
+    <div class="metric"><div class="metric-label">&#128257; Recurring</div><div class="metric-value text-accent">${recCount}</div><div class="metric-sub">recurring transactions</div></div>`;
 
-  // Donut chart
   document.getElementById('catDonut').innerHTML=svgDonut(a.catBreakdown,a.totalExpense);
-
-  // Category bars
   const maxCat=a.catBreakdown.length?a.catBreakdown[0].amount:1;
   document.getElementById('catBars').innerHTML=a.catBreakdown.slice(0,8).map(c=>`<div class="bar-row"><div class="bar-label" title="${c.name}">${c.icon||''} ${c.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(c.amount/maxCat*100).toFixed(1)}%;background:${c.color}"></div></div><div class="bar-value">${c.pct.toFixed(0)}%</div></div>`).join('');
-
-  // Bar chart
   document.getElementById('monthlyBarChart').innerHTML=svgBarChart(a.months);
-
-  // Line chart
   document.getElementById('balanceLine').innerHTML=svgLineChart(transactions);
-
-  // Recent
   const recent=[...transactions].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
-  document.getElementById('recentTx').innerHTML=recent.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.2rem">${c.icon}</span><div><div style="font-size:.85rem;font-weight:600">${t.description}${t.isRecurring?'<span class="tx-recurring">recurring</span>':''}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} &middot; ${c.name}</div></div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;}).join('');
+  document.getElementById('recentTx').innerHTML=recent.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.2rem">${c.icon}</span><div><div style="font-size:.85rem;font-weight:600">${t.description}${recurringBadge(t)}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} &middot; ${c.name}</div></div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;}).join('');
 }
 
 function renderTransactions(){
@@ -928,11 +1149,14 @@ function renderTransactions(){
   const typeF=document.getElementById('txFilterType').value;
   const catF=document.getElementById('txFilterCat').value;
   const acctF=document.getElementById('txFilterAcct').value;
+  const recF=document.getElementById('txFilterRecurring').value;
   const sort=document.getElementById('txSort').value;
   if(search)filtered=filtered.filter(t=>t.description.toLowerCase().includes(search)||(CAT_MAP[t.category]?.name||'').toLowerCase().includes(search)||t.bank.toLowerCase().includes(search)||(t.accountNumber||'').toLowerCase().includes(search));
   if(typeF!=='all')filtered=filtered.filter(t=>t.type===typeF);
   if(catF&&catF!=='all')filtered=filtered.filter(t=>t.category===catF);
   if(acctF&&acctF!=='all')filtered=filtered.filter(t=>(t.accountNumber||'')===acctF);
+  if(recF==='recurring')filtered=filtered.filter(t=>t.isRecurring);
+  else if(recF&&recF!=='all')filtered=filtered.filter(t=>t.recurringType===recF);
   if(sort==='date-desc')filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
   else if(sort==='date-asc')filtered.sort((a,b)=>new Date(a.date)-new Date(b.date));
   else if(sort==='amount-desc')filtered.sort((a,b)=>b.amount-a.amount);
@@ -941,7 +1165,7 @@ function renderTransactions(){
   const tbody=document.getElementById('txBody'),empty=document.getElementById('txEmpty');
   if(!filtered.length){tbody.innerHTML='';tbody.parentElement.style.display='none';empty.style.display='block';return;}
   tbody.parentElement.style.display='';empty.style.display='none';
-  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;return`<tr><td style="white-space:nowrap">${fmtDate(t.date)}</td><td>${t.description}${t.isRecurring?'<span class="tx-recurring">recurring</span>':''}<br><span style="font-size:.72rem;color:var(--text3)">${t.bank}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${t.type==='credit'?'Income':'Expense'}</td></tr>`;}).join('');
+  tbody.innerHTML=filtered.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const src=t.source&&t.source!=='manual'?`<span style="font-size:.65rem;color:var(--accent2)">${t.source.startsWith('gmail:')?'&#128231;':t.source==='sms'?'&#128172;':''}</span> `:'';;return`<tr><td style="white-space:nowrap">${fmtDate(t.date)}</td><td>${src}${t.description}${recurringBadge(t)}<br><span style="font-size:.72rem;color:var(--text3)">${t.bank}</span></td><td><span class="tx-cat" style="background:${c.color}22;color:${c.color}">${c.icon} ${c.name}</span></td><td class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</td><td style="font-size:.8rem;color:var(--text3)">${t.accountNumber||'-'}</td><td>${t.type==='credit'?'Income':'Expense'}</td></tr>`;}).join('');
 }
 
 function renderAccounts(){
@@ -957,11 +1181,8 @@ function renderAccounts(){
     if(t.accountLabel&&!groups[k].label)groups[k].label=t.accountLabel;
   });
   const accts=Object.values(groups).sort((a,b)=>b.count-a.count);
-
-  // Summary metrics
   const totalInc=accts.reduce((s,a)=>s+a.income,0);
   const totalExp=accts.reduce((s,a)=>s+a.expense,0);
-
   el.innerHTML=`<div class="metrics" style="margin-bottom:1.5rem">
     <div class="metric"><div class="metric-label">&#127974; Accounts</div><div class="metric-value text-accent">${accts.length}</div></div>
     <div class="metric"><div class="metric-label">&#128200; Total Inflow</div><div class="metric-value text-green">${fmt(totalInc)}</div></div>
@@ -972,16 +1193,9 @@ function renderAccounts(){
     const label=acctInfo?.label||a.label||'Account';
     const badge=acctInfo?.badge||'';
     const badgeColor=acctInfo?.badgeColor||'var(--text3)';
-    const topCat=Object.entries(a.cats).sort((x,y)=>y[1]-x[1])[0];
-    const topCatInfo=topCat?CAT_MAP[topCat[0]]:null;
-    // Category breakdown mini bars
     const catEntries=Object.entries(a.cats).sort((x,y)=>y[1]-x[1]).slice(0,4);
     const maxCatVal=catEntries.length?catEntries[0][1]:1;
-    const miniBars=catEntries.map(([cid,val])=>{
-      const ci=CAT_MAP[cid];
-      return ci?`<div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text3)"><span>${ci.icon}</span><div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:${(val/maxCatVal*100).toFixed(0)}%;background:${ci.color};border-radius:2px"></div></div><span>${fmt(val)}</span></div>`:'';
-    }).join('');
-
+    const miniBars=catEntries.map(([cid,val])=>{const ci=CAT_MAP[cid];return ci?`<div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text3)"><span>${ci.icon}</span><div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:${(val/maxCatVal*100).toFixed(0)}%;background:${ci.color};border-radius:2px"></div></div><span>${fmt(val)}</span></div>`:''}).join('');
     return`<div class="account-card" onclick="filterByAccount('${a.accountNumber}')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
         <div><div style="font-weight:700;font-size:1rem">${a.accountNumber}</div><div style="font-size:.78rem;color:var(--text3)">${a.bank} &middot; ${label}</div></div>
@@ -1016,16 +1230,66 @@ function renderForecast(){
   const trendColor=fc.trend==='increasing'?'var(--red)':fc.trend==='decreasing'?'var(--green)':'var(--amber)';
   const catEntries=Object.values(fc.catForecast).sort((a,b)=>b.amount-a.amount);
   const maxCF=catEntries.length?catEntries[0].amount:1;
+
+  // Build upcoming recurring section
+  const recHtml=fc.recUpcoming.length?`
+    <div class="card" style="margin-top:1rem;border-left:3px solid var(--accent2)">
+      <div class="card-title" style="color:var(--accent2)">&#128257; Upcoming Recurring Payments</div>
+      ${fc.recUpcoming.map(r=>{
+        const c=CAT_MAP[r.cat]||CAT_MAP.other;
+        const nextStr=r.next.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+        const daysLeft=Math.ceil((r.next-new Date())/(1000*86400));
+        const urgColor=daysLeft<=7?'var(--red)':daysLeft<=14?'var(--amber)':'var(--green)';
+        return`<div class="rec-upcoming-item">
+          <span style="font-size:1.5rem">${c.icon}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:.9rem">${r.description}</div>
+            <div style="font-size:.72rem;color:var(--text3)">${c.name} &middot; ${FREQ_LABELS[r.freq]||'Recurring'}</div>
+            <div style="font-size:.72rem;color:var(--text3)">Due: ${nextStr}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-weight:700;font-size:1rem;color:var(--amber)">${fmt(r.avg)}</div>
+            <div style="font-size:.72rem;font-weight:600;color:${urgColor}">${daysLeft<=0?'Overdue!':daysLeft===0?'Due today!':daysLeft+' days'}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:
+    '<div style="margin-top:1rem;color:var(--text3);font-size:.85rem">No recurring groups detected yet.</div>';
+
   el.innerHTML=`
-    <div class="metrics"><div class="metric forecast-card"><div class="metric-label">&#128300; Predicted Expenses</div><div class="metric-value text-red">${fmt(fc.predictedExpense)}</div><div class="metric-sub">Based on ${fc.monthCount} months</div></div><div class="metric forecast-card"><div class="metric-label">&#128176; Predicted Income</div><div class="metric-value text-green">${fmt(fc.predictedIncome)}</div><div class="metric-sub">Weighted average</div></div><div class="metric forecast-card"><div class="metric-label">Spending Trend</div><div class="metric-value" style="color:${trendColor};text-transform:capitalize">${fc.trend}</div></div><div class="metric forecast-card"><div class="metric-label">Confidence</div><div class="metric-value text-accent">${fc.confidence}%</div><div class="confidence-bar"><div class="confidence-fill" style="width:${fc.confidence}%"></div></div></div></div>
-    <div class="card" style="margin-top:1rem"><div class="card-title">Predicted by Category</div>${catEntries.map(c=>`<div class="bar-row"><div class="bar-label">${c.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(c.amount/maxCF*100).toFixed(1)}%;background:${c.color}"></div></div><div class="bar-value">${fmt(c.amount)}</div></div>`).join('')}</div>`;
+    <div class="metrics">
+      <div class="metric forecast-card"><div class="metric-label">&#128300; Predicted Total Expenses</div><div class="metric-value text-red">${fmt(fc.predictedExpense)}</div><div class="metric-sub">Based on ${fc.monthCount} months</div></div>
+      <div class="metric forecast-card"><div class="metric-label">&#128257; Recurring (monthly equiv.)</div><div class="metric-value" style="color:var(--accent2)">${fmt(fc.predictedRecurring)}</div><div class="metric-sub">Fixed recurring obligations</div></div>
+      <div class="metric forecast-card"><div class="metric-label">&#128202; Variable Expenses</div><div class="metric-value text-amber">${fmt(fc.predictedVariable)}</div><div class="metric-sub">Avg variable spend</div></div>
+      <div class="metric forecast-card"><div class="metric-label">&#128176; Predicted Income</div><div class="metric-value text-green">${fmt(fc.predictedIncome)}</div><div class="metric-sub">Weighted average</div></div>
+      <div class="metric forecast-card"><div class="metric-label">Spending Trend</div><div class="metric-value" style="color:${trendColor};text-transform:capitalize">${fc.trend}</div></div>
+      <div class="metric forecast-card"><div class="metric-label">Confidence</div><div class="metric-value text-accent">${fc.confidence}%</div><div class="confidence-bar"><div class="confidence-fill" style="width:${fc.confidence}%"></div></div></div>
+    </div>
+    <div class="card" style="margin-top:1rem"><div class="card-title">Predicted by Category</div>${catEntries.map(c=>`<div class="bar-row"><div class="bar-label">${c.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(c.amount/maxCF*100).toFixed(1)}%;background:${c.color}"></div></div><div class="bar-value">${fmt(c.amount)}</div></div>`).join('')}</div>
+    ${recHtml}`;
 }
 
 function renderReminders(){
   const el=document.getElementById('remindersContent');
   const rem=getPaymentReminders(transactions);
-  if(!rem.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128276;</div><div class="empty-title">No payment reminders</div><div class="empty-desc">Recurring payments will appear here once detected.</div></div>';return;}
-  el.innerHTML=`<div class="card" style="margin-bottom:1.25rem;background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(251,191,36,.02))"><div style="font-size:.9rem;color:var(--amber);font-weight:600">&#128276; ${rem.length} upcoming payment${rem.length>1?'s':''}</div><div style="font-size:.8rem;color:var(--text3);margin-top:.25rem">Based on recurring patterns</div></div>${rem.map(r=>{const c=CAT_MAP[r.category]||CAT_MAP.other;return`<div class="reminder"><div class="reminder-icon">${c.icon}</div><div class="reminder-info"><div class="reminder-name">${r.description}</div><div class="reminder-detail">Expected ${r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} &middot; ${r.occurrences} past &middot; ${c.name}</div></div><div class="reminder-amount">${fmt(r.expectedAmount)}</div></div>`;}).join('')}`;
+  currentReminders=rem;
+  if(!rem.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128276;</div><div class="empty-title">No payment reminders</div><div class="empty-desc">Mark transactions as recurring or let the system auto-detect patterns.</div></div>';return;}
+  let bannerHTML='';
+  if('Notification' in window){
+    const perm=Notification.permission;
+    if(perm==='default')bannerHTML=`<div class="notify-banner"><span style="font-size:1.3rem">&#128276;</span><div class="notify-banner-text"><strong>Enable notifications</strong> to get reminded about upcoming payments when you open the app.</div><button class="btn btn-ghost btn-sm" onclick="requestNotificationPermission()">Enable</button></div>`;
+    else if(perm==='granted')bannerHTML=`<div class="notify-banner" style="border-color:rgba(52,211,153,.2);background:linear-gradient(135deg,rgba(52,211,153,.06),rgba(52,211,153,.02))"><span style="font-size:1.1rem">&#9989;</span><div class="notify-banner-text" style="font-size:.8rem;color:var(--text3)">Notifications enabled &mdash; you'll be alerted about payments due within 3 days.</div></div>`;
+  }
+  const summaryHTML=`<div class="card" style="margin-bottom:1.25rem;background:linear-gradient(135deg,rgba(251,191,36,.06),rgba(251,191,36,.02))"><div style="font-size:.9rem;color:var(--amber);font-weight:600">&#128276; ${rem.length} upcoming payment${rem.length>1?'s':''}</div><div style="font-size:.8rem;color:var(--text3);margin-top:.25rem">Tap &#128276; to send yourself a reminder.</div></div>`;
+  const cardsHTML=rem.map((r,idx)=>{
+    const c=CAT_MAP[r.category]||CAT_MAP.other;
+    const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const daysLeft=Math.ceil((r.nextDate-new Date())/(1000*86400));
+    const urgBg=daysLeft<=3?'border-left-color:var(--red)':daysLeft<=7?'border-left-color:var(--amber)':'';
+    const freqLabel=FREQ_LABELS[r.freq]||'Recurring';
+    return`<div class="reminder" style="${urgBg}"><div class="reminder-icon">${c.icon}</div><div class="reminder-info"><div class="reminder-name">${r.description} <span class="rec-upcoming-badge">${freqLabel}</span></div><div class="reminder-detail">Due ${dateStr} &middot; ${daysLeft<=0?'<span style="color:var(--red)">Overdue!</span>':daysLeft+' days left'} &middot; ${c.name}</div></div><div class="reminder-amount">${fmt(r.expectedAmount)}</div><div class="reminder-actions"><button class="reminder-action-btn" title="Send Reminder" onclick="openNotifyModal(${idx})">&#128276;</button></div></div>`;
+  }).join('');
+  el.innerHTML=bannerHTML+summaryHTML+cardsHTML;
 }
 
 function renderInsights(){
@@ -1087,128 +1351,431 @@ function parseSmsMessages(){
   if(!text){showToast('Paste SMS messages first','error');return;}
   const chunks=text.split(/\n\s*\n/).map(m=>m.trim()).filter(Boolean);
   const msgs=chunks.length===1&&chunks[0].includes('\n')?chunks[0].split('\n').map(m=>m.trim()).filter(Boolean):chunks;
-  parsedSms=msgs.map(m=>BankMessageParser.parseMessage(m,null)).filter(Boolean);
+  parsedSms=msgs.map(m=>BankMessageParser.parseMessage(m,null,null)).filter(Boolean);
+  // Dedup check against existing
+  const existingFPs=new Set(transactions.map(t=>t.fingerprint));
+  parsedSms.forEach(t=>{t._isDup=existingFPs.has(t.fingerprint);});
   const list=document.getElementById('smsParsedList');
   if(!parsedSms.length){list.innerHTML='<div style="color:var(--text3);font-size:.85rem">No transactions could be parsed. Check the format.</div>';document.getElementById('smsPreview').style.display='block';document.getElementById('smsImportBtn').disabled=true;return;}
-  list.innerHTML=parsedSms.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}</div><div style="font-size:.72rem;color:var(--text3)">${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;}).join('');
+  list.innerHTML=parsedSms.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const dupBadge=t._isDup?'<span class="dup-badge dup-warn">&#9888; Possible Duplicate</span>':'<span class="dup-badge dup-new">&#10003; New</span>';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}${dupBadge}</div><div style="font-size:.72rem;color:var(--text3)">${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;}).join('');
   document.getElementById('smsPreview').style.display='block';
   document.getElementById('smsImportBtn').disabled=false;
 }
 
 function importSmsTransactions(){
   if(!parsedSms.length)return;
-  transactions.unshift(...parsedSms);save();renderAll();
-  showToast(`Imported ${parsedSms.length} transactions from SMS`,'success');
+  const existingFPs=new Set(transactions.map(t=>t.fingerprint));
+  const newTxns=parsedSms.filter(t=>!existingFPs.has(t.fingerprint));
+  const skipped=parsedSms.length-newTxns.length;
+  if(!newTxns.length){showToast('All transactions already exist (duplicates skipped)','error');closeSmsModal();return;}
+  newTxns.forEach(t=>{t.source='sms';});
+  transactions.unshift(...newTxns);save();renderAll();
+  showToast(`Imported ${newTxns.length} from SMS${skipped?' ('+skipped+' duplicates skipped)':''}`, skipped>0?'info':'success');
   closeSmsModal();
 }
 
 // ============================================================
-// GMAIL OAUTH
+// MULTI-ACCOUNT GMAIL OAUTH
 // ============================================================
-let googleTokenClient=null,gmailAccessToken=null;
+// gmailAccounts: array of { idx, email, tokenClient, accessToken, connected }
+let gmailAccounts=[];
 
-function initGoogleAuth(){
-  const s=loadAppSettings();const cid=s.googleClientId;
-  if(!cid||typeof google==='undefined'){return;}
-  googleTokenClient=google.accounts.oauth2.initTokenClient({
+function getGoogleClientId(){return (loadAppSettings().googleClientId||'').trim();}
+
+function refreshGoogleAuth(){
+  const cid=getGoogleClientId();
+  const addBtn=document.getElementById('addGmailAccountBtn');
+  const needEl=document.getElementById('gmailClientIdNeeded');
+  if(!cid||typeof google==='undefined'){
+    if(addBtn)addBtn.style.display='none';
+    if(needEl)needEl.style.display='';
+    return;
+  }
+  if(addBtn)addBtn.style.display='';
+  if(needEl)needEl.style.display='none';
+  // Restore saved emails
+  const s=loadAppSettings();
+  const saved=s.gmailEmails||[];
+  // Re-create token clients for saved emails that aren't already connected
+  saved.forEach(email=>{
+    if(!gmailAccounts.find(a=>a.email===email)){
+      addGmailAccountEntry(email, false);
+    }
+  });
+  renderGmailAccountsList();
+  // Warn if file://
+  const warn=document.getElementById('originWarn');
+  if(warn)warn.style.display=location.protocol==='file:'?'flex':'none';
+}
+
+function addGmailAccountEntry(email, connected){
+  const cid=getGoogleClientId();
+  if(!cid){showToast('Save a Client ID first','error');return;}
+  const idx=gmailAccounts.length;
+  const tokenClient=google.accounts.oauth2.initTokenClient({
     client_id:cid,
     scope:'https://www.googleapis.com/auth/gmail.readonly',
-    callback:handleGToken
+    hint:email||undefined,
+    callback:(resp)=>handleGToken(resp,idx)
   });
-  document.getElementById('gmailConnStatus').innerHTML='<button class="btn btn-primary btn-sm" onclick="requestGmailAccess()">Sign in with Google</button>';
-  // Restore client ID field
-  document.getElementById('googleClientId').value=cid;
+  gmailAccounts.push({idx,email:email||'',tokenClient,accessToken:null,connected:connected||false});
 }
 
-function requestGmailAccess(){
-  if(!googleTokenClient){showToast('Configure Google Client ID in Settings first','error');return;}
-  googleTokenClient.requestAccessToken();
+function addGmailAccount(){
+  if(typeof google==='undefined'){showToast('Google script not loaded','error');return;}
+  const cid=getGoogleClientId();
+  if(!cid){showToast('Save a Client ID first','error');return;}
+  addGmailAccountEntry('',false);
+  const idx=gmailAccounts.length-1;
+  gmailAccounts[idx].tokenClient.requestAccessToken();
+  renderGmailAccountsList();
 }
 
-function handleGToken(resp){
+function handleGToken(resp, idx){
   if(resp.error){showToast('Google sign-in failed: '+resp.error,'error');return;}
-  gmailAccessToken=resp.access_token;
-  showToast('Connected to Gmail','success');
-  document.getElementById('gmailConnStatus').innerHTML=`<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap"><span style="color:var(--green);font-weight:600">&#9989; Connected</span><button class="btn btn-ghost btn-sm" onclick="openGmailModal()">Import Transactions</button><button class="btn btn-outline btn-sm" onclick="revokeGmail()">Disconnect</button></div>`;
+  const acct=gmailAccounts[idx];
+  acct.accessToken=resp.access_token;
+  acct.connected=true;
+  // Fetch the user's email address
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{'Authorization':'Bearer '+resp.access_token}})
+    .then(r=>r.json()).then(info=>{
+      acct.email=info.email||'Account '+(idx+1);
+      // Persist email list
+      const s=loadAppSettings();
+      s.gmailEmails=[...new Set((s.gmailEmails||[]).concat([acct.email]))];
+      localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+      renderGmailAccountsList();
+      showToast('Connected: '+acct.email,'success');
+    }).catch(()=>{acct.email='Account '+(idx+1);renderGmailAccountsList();showToast('Gmail connected','success');});
 }
 
-function revokeGmail(){
-  if(gmailAccessToken&&typeof google!=='undefined')google.accounts.oauth2.revoke(gmailAccessToken);
-  gmailAccessToken=null;initGoogleAuth();showToast('Gmail disconnected','success');
+function reconnectGmailAccount(idx){
+  const acct=gmailAccounts[idx];
+  if(!acct)return;
+  acct.tokenClient.requestAccessToken();
+}
+
+function disconnectGmailAccount(idx){
+  const acct=gmailAccounts[idx];
+  if(!acct)return;
+  if(acct.accessToken&&typeof google!=='undefined')google.accounts.oauth2.revoke(acct.accessToken);
+  // Remove from saved list
+  const s=loadAppSettings();
+  s.gmailEmails=(s.gmailEmails||[]).filter(e=>e!==acct.email);
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+  gmailAccounts.splice(idx,1);
+  // Re-index
+  gmailAccounts.forEach((a,i)=>a.idx=i);
+  renderGmailAccountsList();
+  showToast('Account disconnected','info');
+}
+
+function renderGmailAccountsList(){
+  const el=document.getElementById('gmailAccountsList');
+  if(!el)return;
+  if(!gmailAccounts.length){el.innerHTML='<div style="color:var(--text3);font-size:.82rem;margin-bottom:.5rem">No accounts added yet.</div>';return;}
+  el.innerHTML=gmailAccounts.map(a=>`
+    <div class="gmail-acct-card">
+      <div class="gmail-acct-avatar">${(a.email||'?')[0].toUpperCase()}</div>
+      <div class="gmail-acct-info">
+        <div class="gmail-acct-email">${a.email||'Connecting...'}</div>
+        <div class="gmail-acct-status">${a.connected?'<span style="color:var(--green)">&#9989; Connected</span>':'<span style="color:var(--amber)">&#9888; Token expired — reconnect</span>'}</div>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-shrink:0">
+        ${!a.connected?`<button class="btn btn-ghost btn-sm" onclick="reconnectGmailAccount(${a.idx})">Reconnect</button>`:''}
+        <button class="btn btn-outline btn-sm" onclick="disconnectGmailAccount(${a.idx})">Remove</button>
+      </div>
+    </div>`).join('');
 }
 
 // ============================================================
-// GMAIL IMPORT
+// GMAIL IMPORT — MIME body extraction (Fix 1)
 // ============================================================
+function extractEmailText(payload){
+  if(!payload)return '';
+  // Direct body
+  if(payload.body?.data){
+    try{
+      const raw=atob(payload.body.data.replace(/-/g,'+').replace(/_/g,'/'));
+      if(payload.mimeType==='text/html')return raw.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+      return raw;
+    }catch(e){}
+  }
+  // Walk parts recursively
+  if(payload.parts&&payload.parts.length){
+    // Prefer text/plain
+    const plain=payload.parts.find(p=>p.mimeType==='text/plain');
+    if(plain){const t=extractEmailText(plain);if(t.trim())return t;}
+    // Fall back to text/html
+    const html=payload.parts.find(p=>p.mimeType==='text/html');
+    if(html){const t=extractEmailText(html);if(t.trim())return t;}
+    // Recurse into multipart
+    for(const part of payload.parts){
+      if(part.mimeType&&part.mimeType.startsWith('multipart/')){
+        const t=extractEmailText(part);if(t.trim())return t;
+      }
+    }
+  }
+  return '';
+}
+
 let parsedGmail=[];
 
 function openGmailModal(){
-  if(!gmailAccessToken){showToast('Sign in to Gmail first (Settings page)','error');return;}
+  const connected=gmailAccounts.filter(a=>a.connected);
+  if(!connected.length){showToast('Add and connect a Gmail account in Settings first','error');return;}
   parsedGmail=[];
   document.getElementById('gmailProgress').style.display='none';
   document.getElementById('gmailPreview').style.display='none';
   document.getElementById('gmailImportBtn').disabled=true;
   document.getElementById('gmailFetchBtn').disabled=false;
+  // Populate account selector
+  const sel=document.getElementById('gmailAccountSelect');
+  sel.innerHTML='<option value="all">All Connected Accounts</option>'+gmailAccounts.filter(a=>a.connected).map(a=>`<option value="${a.idx}">${a.email}</option>`).join('');
   document.getElementById('gmailModal').classList.add('show');
 }
 function closeGmailModal(){document.getElementById('gmailModal').classList.remove('show');}
 
-async function fetchGmailTransactions(){
-  if(!gmailAccessToken){showToast('Please sign in to Gmail first','error');return;}
-  const days=parseInt(document.getElementById('gmailSearchDays').value);
+async function fetchFromAccount(acct, days, existingFPs, progCallback){
   const after=new Date();after.setDate(after.getDate()-days);
-  const afterStr=after.toISOString().split('T')[0].replace(/-/g,'/');
-  const query=`after:${afterStr} (subject:(debited OR credited OR transaction OR payment OR "bank alert") OR from:(hdfcbank OR sbibank OR icicibank OR axisbank OR kotakbank OR alerts))`;
+  const afterTs=Math.floor(after.getTime()/1000);
+  // Simpler, broader Gmail query — catches all bank alert emails
+  const query=`after:${afterTs} (subject:(debited OR credited OR transaction OR payment OR alert OR statement) OR from:(hdfc OR sbi OR icici OR axis OR kotak OR paytm OR phonepe OR alerts@))`;
+
+  const searchResp=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=200`,{headers:{'Authorization':'Bearer '+acct.accessToken}});
+  if(!searchResp.ok){
+    if(searchResp.status===401){
+      acct.connected=false;acct.accessToken=null;renderGmailAccountsList();
+      showToast(`Token expired for ${acct.email}. Reconnect in Settings.`,'error');
+      return [];
+    }
+    throw new Error(`Gmail API error ${searchResp.status} for ${acct.email}`);
+  }
+  const searchData=await searchResp.json();
+  const msgIds=(searchData.messages||[]).map(m=>m.id);
+  if(!msgIds.length)return [];
+
+  const results=[];
+  for(let i=0;i<msgIds.length;i++){
+    // Skip already-imported message IDs
+    const mId=msgIds[i];
+    if(transactions.find(t=>t.gmailMsgId===mId))continue;
+
+    const msgResp=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${mId}?format=full`,{headers:{'Authorization':'Bearer '+acct.accessToken}});
+    if(!msgResp.ok)continue;
+    const msg=await msgResp.json();
+    const hdrs=msg.payload?.headers||[];
+    const from=hdrs.find(h=>h.name.toLowerCase()==='from')?.value||'';
+    const subject=hdrs.find(h=>h.name.toLowerCase()==='subject')?.value||'';
+    const dateH=hdrs.find(h=>h.name.toLowerCase()==='date')?.value||'';
+    const body=extractEmailText(msg.payload);
+    const parsed=BankMessageParser.parseMessage(subject+' '+body,from,mId);
+    if(parsed){
+      if(dateH){const ed=new Date(dateH);if(!isNaN(ed.getTime()))parsed.date=ed.toISOString().split('T')[0];}
+      parsed.source='gmail:'+acct.email;
+      // Re-compute fingerprint with correct date
+      parsed.fingerprint=computeFingerprint(parsed);
+      parsed._isDup=existingFPs.has(parsed.fingerprint);
+      results.push(parsed);
+    }
+    if(progCallback)progCallback(i+1,msgIds.length);
+  }
+  return results;
+}
+
+async function fetchGmailTransactions(){
+  const selVal=document.getElementById('gmailAccountSelect').value;
+  const days=parseInt(document.getElementById('gmailSearchDays').value);
+  const accountsToFetch=selVal==='all'?gmailAccounts.filter(a=>a.connected):[gmailAccounts[parseInt(selVal)]].filter(Boolean);
+
+  if(!accountsToFetch.length){showToast('No connected accounts selected','error');return;}
 
   const prog=document.getElementById('gmailProgress');
   const progText=document.getElementById('gmailProgressText');
   const progBar=document.getElementById('gmailProgressBar');
-  prog.style.display='block';progText.textContent='Searching Gmail...';progBar.style.width='20%';
+  prog.style.display='block';progText.textContent='Connecting to Gmail...';progBar.style.width='5%';
   document.getElementById('gmailFetchBtn').disabled=true;
+  document.getElementById('gmailPreview').style.display='none';
+
+  const existingFPs=new Set(transactions.map(t=>t.fingerprint));
+  parsedGmail=[];
 
   try{
-    const searchResp=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`,{headers:{'Authorization':'Bearer '+gmailAccessToken}});
-    if(!searchResp.ok){if(searchResp.status===401){googleTokenClient.requestAccessToken();return;}throw new Error('Gmail API error: '+searchResp.status);}
-    const searchData=await searchResp.json();
-    const msgIds=(searchData.messages||[]).map(m=>m.id);
-    if(!msgIds.length){progText.textContent='No bank emails found.';progBar.style.width='100%';document.getElementById('gmailFetchBtn').disabled=false;return;}
-
-    progText.textContent=`Found ${msgIds.length} emails. Parsing...`;progBar.style.width='50%';
-    parsedGmail=[];
-
-    for(let i=0;i<msgIds.length;i++){
-      const msgResp=await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgIds[i]}?format=full`,{headers:{'Authorization':'Bearer '+gmailAccessToken}});
-      const msg=await msgResp.json();
-      const hdrs=msg.payload?.headers||[];
-      const from=hdrs.find(h=>h.name.toLowerCase()==='from')?.value||'';
-      const subject=hdrs.find(h=>h.name.toLowerCase()==='subject')?.value||'';
-      const dateH=hdrs.find(h=>h.name.toLowerCase()==='date')?.value||'';
-      let body='';
-      if(msg.payload?.body?.data)body=atob(msg.payload.body.data.replace(/-/g,'+').replace(/_/g,'/'));
-      else if(msg.payload?.parts){const tp=msg.payload.parts.find(p=>p.mimeType==='text/plain');if(tp?.body?.data)body=atob(tp.body.data.replace(/-/g,'+').replace(/_/g,'/'));}
-      const parsed=BankMessageParser.parseMessage(subject+' '+body,from);
-      if(parsed){if(dateH){const ed=new Date(dateH);if(!isNaN(ed.getTime()))parsed.date=ed.toISOString().split('T')[0];}parsedGmail.push(parsed);}
-      progBar.style.width=(50+(i/msgIds.length)*50)+'%';
+    for(let ai=0;ai<accountsToFetch.length;ai++){
+      const acct=accountsToFetch[ai];
+      progText.textContent=`Fetching from ${acct.email} (${ai+1}/${accountsToFetch.length})...`;
+      const results=await fetchFromAccount(acct,days,existingFPs,(done,total)=>{
+        const base=(ai/accountsToFetch.length)*100;
+        const chunk=(1/accountsToFetch.length)*100;
+        progBar.style.width=(base+chunk*(done/total))+'%';
+        progText.textContent=`${acct.email}: Parsing email ${done}/${total}...`;
+      });
+      parsedGmail.push(...results);
     }
 
     progBar.style.width='100%';
-    progText.textContent=`Parsed ${parsedGmail.length} transactions from ${msgIds.length} emails.`;
+    const dupCount=parsedGmail.filter(t=>t._isDup).length;
+    progText.textContent=`Done: ${parsedGmail.length} transactions found (${dupCount} possible duplicates).`;
     document.getElementById('gmailFoundCount').textContent=parsedGmail.length;
-    document.getElementById('gmailParsedList').innerHTML=parsedGmail.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} · ${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;}).join('');
+    document.getElementById('gmailDupCount').textContent=dupCount+' possible duplicate'+(dupCount!==1?'s':'');
+    document.getElementById('gmailParsedList').innerHTML=parsedGmail.map(t=>{
+      const c=CAT_MAP[t.category]||CAT_MAP.other;
+      const dupBadge=t._isDup?'<span class="dup-badge dup-warn">&#9888; Possible Dup</span>':'<span class="dup-badge dup-new">&#10003; New</span>';
+      const srcLabel=t.source&&t.source.startsWith('gmail:')?t.source.replace('gmail:',''):'';
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}${dupBadge}</div><div style="font-size:.72rem;color:var(--text3)">${fmtDate(t.date)} · ${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}${srcLabel?' · '+srcLabel:''}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;
+    }).join('');
     document.getElementById('gmailPreview').style.display='block';
     document.getElementById('gmailImportBtn').disabled=parsedGmail.length===0;
-  }catch(err){progText.textContent='Error: '+err.message;console.error(err);}
-  finally{document.getElementById('gmailFetchBtn').disabled=false;}
+  }catch(err){
+    progText.textContent='Error: '+err.message;
+    console.error(err);
+    showToast('Gmail fetch error: '+err.message,'error');
+  }finally{
+    document.getElementById('gmailFetchBtn').disabled=false;
+  }
 }
 
 function importGmailTransactions(){
   if(!parsedGmail.length)return;
-  const existing=new Set(transactions.map(t=>`${t.date}_${t.amount}_${t.bank}`));
-  const newTxns=parsedGmail.filter(t=>!existing.has(`${t.date}_${t.amount}_${t.bank}`));
-  if(!newTxns.length){showToast('All transactions already exist (duplicates skipped)','error');closeGmailModal();return;}
-  transactions.unshift(...newTxns);save();renderAll();
-  showToast(`Imported ${newTxns.length} from Gmail (${parsedGmail.length-newTxns.length} duplicates skipped)`,'success');
+  const skipDups=document.getElementById('gmailSkipDups').checked;
+  const existingFPs=new Set(transactions.map(t=>t.fingerprint));
+  let toImport=parsedGmail;
+  if(skipDups)toImport=parsedGmail.filter(t=>!existingFPs.has(t.fingerprint));
+  if(!toImport.length){showToast('All transactions already exist (duplicates skipped)','error');closeGmailModal();return;}
+  transactions.unshift(...toImport);save();renderAll();
+  const skipped=parsedGmail.length-toImport.length;
+  showToast(`Imported ${toImport.length} from Gmail${skipped?' ('+skipped+' duplicates skipped)':''}`,skipped>0?'info':'success');
   closeGmailModal();
+}
+
+// ============================================================
+// RECURRING FORM HELPERS
+// ============================================================
+let selectedRecFreq=null;
+
+function toggleRecurringFreq(){
+  const checked=document.getElementById('addIsRecurring').checked;
+  const row=document.getElementById('recFreqRow');
+  const hint=document.getElementById('recFreqHint');
+  row.classList.toggle('show',checked);
+  hint.style.display=checked?'block':'none';
+  if(!checked){selectedRecFreq=null;document.querySelectorAll('.rec-freq-btn').forEach(b=>b.classList.remove('active'));}
+}
+
+function setRecFreq(freq){
+  selectedRecFreq=freq;
+  document.querySelectorAll('.rec-freq-btn').forEach(b=>b.classList.toggle('active',b.dataset.freq===freq));
+}
+
+// ============================================================
+// REMINDER NOTIFICATIONS
+// ============================================================
+let currentReminders=[];
+let selectedReminderIdx=null;
+
+function openNotifyModal(idx){
+  selectedReminderIdx=idx;
+  const r=currentReminders[idx];
+  if(!r)return;
+  const c=CAT_MAP[r.category]||CAT_MAP.other;
+  const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('notifyReminderSummary').innerHTML=
+    `<div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:1.5rem">${c.icon}</span><div><div style="font-weight:600">${r.description} <span class="rec-upcoming-badge">${FREQ_LABELS[r.freq]||'Recurring'}</span></div><div style="font-size:.8rem;color:var(--text3)">${dateStr} &middot; ${fmt(r.expectedAmount)}</div></div></div>`;
+  document.getElementById('notifyShareBtn').style.display=navigator.share?'':'none';
+  document.getElementById('notifyBrowserBtn').style.display=('Notification' in window)?'':'none';
+  document.getElementById('notifyModal').classList.add('show');
+}
+function closeNotifyModal(){document.getElementById('notifyModal').classList.remove('show');selectedReminderIdx=null;}
+
+const NOTIFY_ICON='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%230f1117"/><text x="50" y="65" text-anchor="middle" font-size="50" fill="%2338bdf8">W</text></svg>';
+
+async function notifyViaBrowser(){
+  const r=currentReminders[selectedReminderIdx];if(!r)return;
+  if(!('Notification' in window)){showToast('Browser notifications not supported','error');return;}
+  let perm=Notification.permission;
+  if(perm==='default')perm=await Notification.requestPermission();
+  if(perm!=='granted'){showToast('Notification permission denied. Enable in browser settings.','error');return;}
+  const c=CAT_MAP[r.category]||CAT_MAP.other;
+  const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const n=new Notification('WiseSpender Payment Reminder',{
+    body:`${r.description} — ${fmt(r.expectedAmount)} due ${dateStr}`,
+    icon:NOTIFY_ICON,
+    tag:'reminder-'+r.description.toLowerCase().replace(/\s+/g,'-'),
+  });
+  n.onclick=function(){window.focus();document.querySelector('[data-page="reminders"]').click();n.close();};
+  markReminderNotified(r);
+  showToast('Notification sent!','success');
+  closeNotifyModal();
+}
+
+function notifyViaEmail(){
+  const r=currentReminders[selectedReminderIdx];if(!r)return;
+  const c=CAT_MAP[r.category]||CAT_MAP.other;
+  const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const subject=encodeURIComponent(`Payment Reminder: ${r.description} — ${fmt(r.expectedAmount)}`);
+  const body=encodeURIComponent(`Hi,\n\nThis is a reminder from WiseSpender:\n\nPayment: ${r.description}\nFrequency: ${FREQ_LABELS[r.freq]||'Recurring'}\nCategory: ${c.name}\nExpected Amount: ${fmt(r.expectedAmount)}\nDue Date: ${dateStr}\nBased on: ${r.occurrences} past transactions\n\n---\nSent from WiseSpender Expense Tracker`);
+  window.open(`mailto:?subject=${subject}&body=${body}`,'_self');
+  showToast('Email client opened','info');
+  closeNotifyModal();
+}
+
+async function notifyViaShare(){
+  const r=currentReminders[selectedReminderIdx];if(!r)return;
+  const c=CAT_MAP[r.category]||CAT_MAP.other;
+  const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const text=`Payment Reminder: ${r.description}\nFrequency: ${FREQ_LABELS[r.freq]||'Recurring'}\nAmount: ${fmt(r.expectedAmount)}\nDue: ${dateStr}\nCategory: ${c.name}\n(${r.occurrences} past transactions)\n— WiseSpender`;
+  try{await navigator.share({title:'WiseSpender Payment Reminder',text});showToast('Reminder shared!','success');}
+  catch(err){if(err.name!=='AbortError')showToast('Share failed: '+err.message,'error');}
+  closeNotifyModal();
+}
+
+function notifyViaCalendar(){
+  const r=currentReminders[selectedReminderIdx];if(!r)return;
+  const c=CAT_MAP[r.category]||CAT_MAP.other;
+  const d=r.nextDate;
+  const pad=n=>String(n).padStart(2,'0');
+  const dateStr=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  const title=encodeURIComponent(`Payment Due: ${r.description} (${fmt(r.expectedAmount)})`);
+  const details=encodeURIComponent(`Frequency: ${FREQ_LABELS[r.freq]||'Recurring'}\nCategory: ${c.name}\nExpected Amount: ${fmt(r.expectedAmount)}\nBased on ${r.occurrences} past transactions\n\nTracked by WiseSpender`);
+  window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateStr}/${dateStr}&details=${details}`,'_blank');
+  showToast('Calendar event opened','success');
+  closeNotifyModal();
+}
+
+function markReminderNotified(r){
+  const s=loadAppSettings();const today=new Date().toISOString().split('T')[0];
+  if(!s.notifiedReminders)s.notifiedReminders={};
+  s.notifiedReminders[r.description.toLowerCase().trim()+'_'+today]=true;
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+}
+
+function cleanupNotificationTracking(){
+  const s=loadAppSettings();const nr=s.notifiedReminders||{};
+  const cutoff=new Date(Date.now()-7*864e5).toISOString().split('T')[0];
+  Object.keys(nr).forEach(k=>{const d=k.split('_').pop();if(d<cutoff)delete nr[k];});
+  s.notifiedReminders=nr;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+}
+
+function checkDueReminders(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const rem=getPaymentReminders(transactions);if(!rem.length)return;
+  const now=new Date(),threeDays=3*864e5;
+  const due=rem.filter(r=>{const diff=r.nextDate.getTime()-now.getTime();return diff>=0&&diff<=threeDays;});
+  if(!due.length)return;
+  const s=loadAppSettings(),today=now.toISOString().split('T')[0],nr=s.notifiedReminders||{};
+  const unnotified=due.filter(r=>!nr[r.description.toLowerCase().trim()+'_'+today]);
+  if(!unnotified.length)return;
+  if(unnotified.length===1){const r=unnotified[0];const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});new Notification('WiseSpender: Payment Due Soon',{body:`${r.description} — ${fmt(r.expectedAmount)} due ${dateStr}`,icon:NOTIFY_ICON,tag:'wisespender-due'});}
+  else{const total=unnotified.reduce((s,r)=>s+r.expectedAmount,0);new Notification(`WiseSpender: ${unnotified.length} Payments Due Soon`,{body:`Total: ${fmt(total)} across ${unnotified.length} payments in the next 3 days`,icon:NOTIFY_ICON,tag:'wisespender-due'});}
+  unnotified.forEach(r=>{nr[r.description.toLowerCase().trim()+'_'+today]=true;});
+  s.notifiedReminders=nr;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+}
+
+async function requestNotificationPermission(){
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){showToast('Notifications enabled!','success');checkDueReminders();}
+  else if(perm==='denied')showToast('Notifications blocked. Enable in browser settings.','error');
+  renderReminders();
 }
 
 // ============================================================
@@ -1218,8 +1785,8 @@ function loadTestData(){transactions=generateTestData();save();renderAll();showT
 function clearAllData(){if(!transactions.length)return;if(!confirm('Delete all transactions?'))return;transactions=[];save();renderAll();showToast('All data cleared','error');}
 function exportCSV(){
   if(!transactions.length){showToast('No data to export','error');return;}
-  const rows=[['Date','Description','Amount','Type','Category','Bank','Account','Recurring']];
-  transactions.forEach(t=>{rows.push([t.date,`"${t.description}"`,t.amount,t.type,CAT_MAP[t.category]?.name||t.category,t.bank,t.accountNumber||'',t.isRecurring]);});
+  const rows=[['Date','Description','Amount','Type','Category','Bank','Account','Recurring','Frequency','Source']];
+  transactions.forEach(t=>{rows.push([t.date,`"${t.description}"`,t.amount,t.type,CAT_MAP[t.category]?.name||t.category,t.bank,t.accountNumber||'',t.isRecurring,t.recurringType||'',t.source||'manual']);});
   const csv=rows.map(r=>r.join(',')).join('\n');
   const blob=new Blob([csv],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wisespender_export.csv';a.click();
@@ -1232,12 +1799,19 @@ function openAddModal(){
   document.getElementById('addBank').value='Manual';document.getElementById('addAccNum').value='';
   document.getElementById('voiceTranscript').style.display='none';
   document.getElementById('voiceStatus').style.display='none';
+  document.getElementById('addIsRecurring').checked=false;
+  selectedRecFreq=null;
+  document.getElementById('recFreqRow').classList.remove('show');
+  document.getElementById('recFreqHint').style.display='none';
+  document.querySelectorAll('.rec-freq-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('addModal').classList.add('show');
 }
 function closeAddModal(){document.getElementById('addModal').classList.remove('show');resetVoiceUI();}
 
 function saveTransaction(e){
   e.preventDefault();
+  const isRec=document.getElementById('addIsRecurring').checked;
+  const gid=isRec?(crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)):null;
   const tx={
     id:crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     date:document.getElementById('addDate').value,
@@ -1247,15 +1821,29 @@ function saveTransaction(e){
     category:document.getElementById('addCat').value,
     bank:document.getElementById('addBank').value.trim()||'Manual',
     accountNumber:document.getElementById('addAccNum').value.trim()||'',
-    isRecurring:false
+    isRecurring:isRec,
+    recurringType:isRec?selectedRecFreq:null,
+    recurringGroupId:gid,
+    source:'manual',
+    fingerprint:''
   };
+  tx.fingerprint=computeFingerprint(tx);
   transactions.unshift(tx);save();renderAll();closeAddModal();
   showToast('Transaction added: '+tx.description,'success');
 }
 
-document.getElementById('addDesc').addEventListener('input',function(){document.getElementById('addCat').value=autoCategory(this.value);});
+// Auto-suggest category and recurring on description input
+document.getElementById('addDesc').addEventListener('input',function(){
+  document.getElementById('addCat').value=autoCategory(this.value);
+  const suggestedFreq=suggestRecurring(this.value);
+  if(suggestedFreq){
+    document.getElementById('addIsRecurring').checked=true;
+    toggleRecurringFreq();
+    setRecFreq(suggestedFreq);
+  }
+});
 
-function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+type+' show';setTimeout(()=>t.classList.remove('show'),3000);}
+function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast toast-'+type+' show';setTimeout(()=>t.classList.remove('show'),3500);}
 
 // ============================================================
 // NAV
@@ -1288,7 +1876,10 @@ const _s=loadAppSettings();
 if(_s.googleClientId)document.getElementById('googleClientId').value=_s.googleClientId;
 
 // Init Google Auth when GIS library loads
-function tryInitGoogle(){if(typeof google!=='undefined'&&google.accounts)initGoogleAuth();else setTimeout(tryInitGoogle,500);}
+function tryInitGoogle(){
+  if(typeof google!=='undefined'&&google.accounts)refreshGoogleAuth();
+  else setTimeout(tryInitGoogle,500);
+}
 tryInitGoogle();
 
 // ============================================================
@@ -1315,7 +1906,6 @@ function installPWA(){
       deferredInstallPrompt=null;
     });
   } else {
-    // Fallback instructions for iOS / browsers without beforeinstallprompt
     showToast('Use your browser menu → "Add to Home Screen" to install.','info');
   }
 }
@@ -1327,14 +1917,11 @@ function installPWA(){
   const params=new URLSearchParams(window.location.search);
   const sharedText=params.get('sms');
   if(!sharedText)return;
-  // Clean URL without reloading
   history.replaceState(null,'',window.location.pathname);
-  // Decode and parse the shared SMS
   const text=decodeURIComponent(sharedText).trim();
   if(!text)return;
-  const parsed=BankMessageParser.parseMessage(text,null);
+  const parsed=BankMessageParser.parseMessage(text,null,null);
   if(parsed){
-    // Auto-open SMS modal with pre-populated data
     openSmsModal();
     document.getElementById('smsPasteArea').value=text;
     parsedSms=[parsed];
@@ -1345,12 +1932,17 @@ function installPWA(){
     document.getElementById('smsImportBtn').disabled=false;
     showToast('SMS received! Review and import the transaction.','success');
   } else {
-    // Could not parse — show modal with raw text so user can edit
     openSmsModal();
     document.getElementById('smsPasteArea').value=text;
     showToast('SMS received but could not auto-parse. Try clicking Parse.','info');
   }
 })();
+
+// Auto-check due reminders on app open
+cleanupNotificationTracking();
+setTimeout(checkDueReminders,2000);
 </script>
+
+
 </body>
 </html>
