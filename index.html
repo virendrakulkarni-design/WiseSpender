@@ -258,7 +258,7 @@ input,select,textarea{font-family:inherit}
       <div class="topbar-actions">
         <button class="btn btn-ghost btn-sm" onclick="openAddModal()">+ Add</button>
         <button class="btn btn-ghost btn-sm" onclick="openAddModal();setTimeout(toggleVoiceInput,300)">&#127908; Voice</button>
-        <button class="btn btn-ghost btn-sm" onclick="openSmsModal()">&#128172; SMS</button>
+        <button class="btn btn-ghost btn-sm" onclick="openSmsModal()">&#128203; Paste Text</button>
         <button class="btn btn-primary btn-sm" onclick="loadTestData()">Test Data</button>
         <button class="btn btn-outline btn-sm" onclick="exportCSV()">CSV</button>
         <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear</button>
@@ -376,6 +376,17 @@ input,select,textarea{font-family:inherit}
           <div style="font-size:0.75rem;color:var(--text3);margin-top:0.4rem;padding-left:1.8rem;">
             Automatically groups recurring payments if they occur across multiple months.
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <select class="form-input" id="settingCurrency">
+            <option value="INR">₹ (INR) - India</option>
+            <option value="USD">$ (USD) - US/Canada/Aus</option>
+            <option value="EUR">€ (EUR) - Europe</option>
+            <option value="GBP">£ (GBP) - UK</option>
+            <option value="CAD">C$ (CAD) - Canada</option>
+            <option value="AUD">A$ (AUD) - Australia</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Google OAuth Client ID</label>
@@ -527,7 +538,7 @@ input,select,textarea{font-family:inherit}
 <div class="modal-overlay" id="smsModal">
   <div class="modal" style="max-width:600px">
     <div class="modal-header">
-      <div class="modal-title">Import from SMS</div>
+      <div class="modal-title">Import from SMS / Raw Text</div>
       <button class="modal-close" onclick="closeSmsModal()">&times;</button>
     </div>
     <div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.06));border:1px solid rgba(56,189,248,.15);border-radius:var(--radius);padding:1rem;margin-bottom:1.25rem">
@@ -536,8 +547,8 @@ input,select,textarea{font-family:inherit}
       <button class="btn btn-ghost btn-sm" style="margin-top:.6rem" onclick="installPWA()">Install App</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Or paste bank SMS messages below (one per line)</label>
-      <textarea class="form-input" id="smsPasteArea" rows="6" placeholder="Example:&#10;HDFC Bank: Rs.1,500.00 debited from a/c XX1234 for UPI/Swiggy on 15-01-25.&#10;&#10;SBI: INR 45,000.00 credited to your a/c XX5678 - Salary Jan 2025"></textarea>
+      <label class="form-label">Or paste bank SMS messages or email contents below (one per line/block)</label>
+      <textarea class="form-input" id="smsPasteArea" rows="6" placeholder="Example:&#10;HDFC Bank: Rs.1,500.00 debited from a/c XX1234 for UPI/Swiggy on 15-01-25.&#10;&#10;Or paste your entire banking email text here to test the parser..."></textarea>
     </div>
     <div id="smsPreview" style="display:none">
       <div class="card-title" style="margin-bottom:.75rem">Parsed Transactions</div>
@@ -897,16 +908,19 @@ function loadAppSettings(){
     return s;
   }catch(e){
     accountAliases = {};
-    return {autoRecurringEnabled: true, accountAliases: {}};
+return {autoRecurringEnabled: true, accountAliases: {}};
   }
 }
 function saveAppSettings(){
   const s=loadAppSettings();
-  s.googleClientId=document.getElementById('googleClientId').value.trim();
-  s.autoRecurringEnabled=document.getElementById('autoRecurringToggle').checked;
+  s.googleClientId = document.getElementById('googleClientId').value.trim();
+  s.autoRecurringEnabled = document.getElementById('autoRecurringToggle').checked;
+  s.currency = document.getElementById('settingCurrency').value;
   s.accountAliases = accountAliases;
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
+  updateCurrencyGlobal();
   showToast('Settings saved','success');
+  renderAll();
   refreshGoogleAuth();
 }
 
@@ -1261,7 +1275,11 @@ function svgLineChart(txns){
 // ============================================================
 // FORMATTERS
 // ============================================================
-function fmt(n){return '₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:0,maximumFractionDigits:0});}
+// Global currency formatter
+const CURRENCY_MAP={INR:{sym:'₹',loc:'en-IN'},USD:{sym:'$',loc:'en-US'},CAD:{sym:'C$',loc:'en-CA'},EUR:{sym:'€',loc:'de-DE'},GBP:{sym:'£',loc:'en-GB'},AUD:{sym:'A$',loc:'en-AU'}};
+let CURRENT_CURRENCY=CURRENCY_MAP.INR;
+function updateCurrencyGlobal(){const s=loadAppSettings();CURRENT_CURRENCY=CURRENCY_MAP[s.currency||'INR']||CURRENCY_MAP.INR;}
+function fmt(n){return CURRENT_CURRENCY.sym+Number(n).toLocaleString(CURRENT_CURRENCY.loc,{minimumFractionDigits:0,maximumFractionDigits:0});}
 function fmtDate(d){return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
 function fmtDateTime(d){if(!d)return'';const dt=new Date(d);if(isNaN(dt.getTime()))return d;return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+(d.includes('T')?', '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'');}
 function monthLabel(mk){const[y,m]=mk.split('-');return new Date(y,m-1).toLocaleDateString('en-IN',{month:'short',year:'2-digit'});}
@@ -2180,9 +2198,19 @@ renderAll();
 
 // Restore settings
 const _s=loadAppSettings();
-if(_s.googleClientId)document.getElementById('googleClientId').value=_s.googleClientId;
-if(_s.autoRecurringEnabled!==undefined)document.getElementById('autoRecurringToggle').checked=_s.autoRecurringEnabled;
-else document.getElementById('autoRecurringToggle').checked=true;
+if(typeof updateCurrencyGlobal==='function') updateCurrencyGlobal();
+if(_s.googleClientId) {
+  document.getElementById('googleClientId').value=_s.googleClientId;
+  if(_s.autoRecurringEnabled !== undefined) {
+    document.getElementById('autoRecurringToggle').checked = _s.autoRecurringEnabled;
+  }
+  if(_s.currency) {
+    const currEl = document.getElementById('settingCurrency');
+    if(currEl) currEl.value = _s.currency;
+  }
+} else {
+  document.getElementById('autoRecurringToggle').checked=true;
+}
 
 // Init Google Auth when GIS library loads
 function tryInitGoogle(){
