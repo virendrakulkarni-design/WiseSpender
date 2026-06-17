@@ -763,7 +763,7 @@ const BankMessageParser = {
   ACCT_PATS:[/(?:a\/c|ac|acct|account)\s*[#:]*\s*[xX*]*(\d{4,})/i,/[xX*]+(\d{4})/,/(?:ending|linked)\s*(\d{4})/i],
   NARRATION_PAT:/\b(?:merchant name|narration|remarks|description|details|particulars|info)\b\s*[:\-]?\s*([A-Za-z0-9 \t&.'\-\/]{3,50})(?:\.|\r|\n|$)/i,
   TARGET_PATS:[/\b(?:to|from)\s+(?:vpa|upi(?: id)?|account|a\/c)\s+([A-Za-z0-9.\-_@]+)/i,/\b(?:transfer(?:red)? to|sent to|paid to)\s+([A-Za-z0-9 \t&.'\-\/]{3,50})(?:\b|$)/i,/\b(?:received from|by)\s+([A-Za-z0-9 \t&.'\-\/]{3,50})(?:\b|$)/i],
-  MERCHANT_PAT:/\b(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/)\s*([A-Za-z0-9 \t&.'\-\/]{3,50})/i,
+  MERCHANT_PAT:/\b(?:at|towards|ACH-DR-|BIL\/|POS\/|ECOM\/|merchant name:\s*|merchant:\s*)\s*([A-Za-z0-9 \t&.'\-\/]{3,50})/i,
   INFO_PAT:/(?:[-–]\s*|\binfo:\s*|\bref:\s*|\bfor\s+)([A-Za-z][A-Za-z0-9 \t&.'\-\/]{2,50})(?:\.|\r|\n|$)/im,
   DEBIT_KW:['debited','debit','spent','paid','purchase','withdrawn','sent','charged','deducted','payment'],
   CREDIT_KW:['credited','credit','received','deposited','refund','cashback','reversed','salary'],
@@ -800,6 +800,8 @@ const BankMessageParser = {
     // Clean up generic bank disclaimers that confuse the parser
     const text = rawText.replace(/if\s+(?:(?:this|the)\s+)?(?:transaction\s+)?(?:has\s+)?(?:was\s+)?not\s*(?:been\s+)?(?:initiated|intiated|done)?\s*(?:by\s+you)?[\s\S]*$/i, '')
                         .replace(/(?:\.|,)?\s*(?:to\s+)?check\s+your(?:\s+(?:available\s+)?(?:balance|bal|limit|balan)?)?[\s\S]*$/i, '')
+                        .replace(/available\s+(?:credit\s+)?(?:limit|balance|bal)[\s\S]*$/i, '')
+                        .replace(/total\s+(?:credit\s+)?limit[\s\S]*$/i, '')
                         .replace(/not you\?[\s\S]*$/i, '')
                         .replace(/call \d+[\s\S]*$/i, '');
 
@@ -1664,8 +1666,14 @@ function closeSmsModal(){document.getElementById('smsModal').classList.remove('s
 function parseSmsMessages(){
   const text=document.getElementById('smsPasteArea').value.trim();
   if(!text){showToast('Paste SMS messages first','error');return;}
-  const chunks=text.split(/\n\s*\n/).map(m=>m.trim()).filter(Boolean);
-  const msgs=chunks.length===1&&chunks[0].includes('\n')?chunks[0].split('\n').map(m=>m.trim()).filter(Boolean):chunks;
+  const isEmail = text.length > 150 && (/merchant/i.test(text) || /transaction amount/i.test(text) || /dear/i.test(text) || /summary/i.test(text));
+  let msgs = [];
+  if (isEmail) {
+    msgs = [text];
+  } else {
+    const chunks=text.split(/\n\s*\n/).map(m=>m.trim()).filter(Boolean);
+    msgs=chunks.length===1&&chunks[0].includes('\n')?chunks[0].split('\n').map(m=>m.trim()).filter(Boolean):chunks;
+  }
   parsedSms=msgs.map(m=>BankMessageParser.parseMessage(m,null,null)).filter(Boolean);
   // Dedup check against existing
   const existingFPs=new Set(transactions.map(t=>t.fingerprint));
