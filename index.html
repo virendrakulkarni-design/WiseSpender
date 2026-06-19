@@ -1680,7 +1680,28 @@ function parseSmsMessages(){
   parsedSms.forEach(t=>{t._isDup=existingFPs.has(t.fingerprint);});
   const list=document.getElementById('smsParsedList');
   if(!parsedSms.length){list.innerHTML='<div style="color:var(--text3);font-size:.85rem">No transactions could be parsed. Check the format.</div>';document.getElementById('smsPreview').style.display='block';document.getElementById('smsImportBtn').disabled=true;return;}
-  list.innerHTML=parsedSms.map(t=>{const c=CAT_MAP[t.category]||CAT_MAP.other;const dupBadge=t._isDup?'<span class="dup-badge dup-warn">&#9888; Possible Duplicate</span>':'<span class="dup-badge dup-new">&#10003; New</span>';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--border)"><div><div style="font-size:.85rem;font-weight:600">${t.description}${dupBadge}</div><div style="font-size:.72rem;color:var(--text3)">${t.bank}${t.accountNumber?' · '+t.accountNumber:''} · ${c.name}</div></div><div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}">${t.type==='credit'?'+':'−'}${fmt(t.amount)}</div></div>`;}).join('');
+  list.innerHTML=parsedSms.map(t=>{
+    const c=CAT_MAP[t.category]||CAT_MAP.other;
+    const dupBadge=t._isDup?'<span class="dup-badge dup-warn">&#9888; Duplicate</span>':'<span class="dup-badge dup-new">&#10003; New</span>';
+    return `<div style="padding: 1rem; border: 1px solid var(--border); background: var(--surface2); border-radius: var(--radius); margin-bottom: 0.75rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem">
+        <div>
+          <div style="font-weight:600;font-size:1rem;color:var(--text)">${t.description} ${dupBadge}</div>
+          <div style="font-size:.75rem;color:var(--text3);margin-top:.2rem">${t.bank} ${t.accountNumber?' · '+t.accountNumber:''}</div>
+        </div>
+        <div class="tx-amount ${t.type==='credit'?'text-green':'text-red'}" style="font-size:1.1rem;font-weight:700">
+          ${t.type==='credit'?'+':'−'}${fmt(t.amount)}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:.8rem;color:var(--text2);background:var(--surface3);padding:.5rem;border-radius:6px;margin-top:.75rem">
+        <div><strong>Category:</strong> ${c.icon} ${c.name}</div>
+        <div><strong>Type:</strong> <span style="text-transform:capitalize">${t.type}</span></div>
+        ${t.targetAccount ? `<div style="grid-column:1/-1"><strong>Target/Merchant:</strong> ${t.targetAccount}</div>` : ''}
+        ${t.mode && t.mode !== 'Transfer' ? `<div><strong>Mode:</strong> ${t.mode}</div>` : ''}
+        ${t.refNo ? `<div><strong>Ref No:</strong> ${t.refNo}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
   document.getElementById('smsPreview').style.display='block';
   document.getElementById('smsImportBtn').disabled=false;
 }
