@@ -454,6 +454,13 @@ input,select,textarea{font-family:inherit}
         <div id="gmailClientIdNeeded" style="color:var(--text3);font-size:.85rem">Configure Client ID above and Save first.</div>
       </div>
       <div class="card" style="max-width:600px;margin-top:1.25rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+          <div class="card-title" style="margin-bottom:0">&#128193; Categories</div>
+          <button class="btn btn-ghost btn-sm" onclick="openAddCategoryModal()">+ Add Category</button>
+        </div>
+        <div id="settingsCategoriesList" style="display:flex;flex-wrap:wrap;gap:0.4rem;max-height:180px;overflow-y:auto;padding:0.2rem"></div>
+      </div>
+      <div class="card" style="max-width:600px;margin-top:1.25rem">
         <div class="card-title">Data</div>
         <div style="display:flex;gap:.75rem;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="loadTestData()">Load Test Data</button>
@@ -652,12 +659,99 @@ input,select,textarea{font-family:inherit}
         </div>
       </div>
 
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+          <label class="form-label" style="margin-bottom:0">Default / Primary Category</label>
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:0.75rem;padding:0.1rem 0.4rem" onclick="openAddCategoryModal('account')">+ New Category</button>
+        </div>
+        <select class="form-input" id="editAccCategory"></select>
+        <div style="font-size:0.72rem;color:var(--text3);margin-top:0.3rem">
+          Primary category for this account (e.g. Salary, Rent, Groceries, Shopping).
+        </div>
+      </div>
+
       <div style="display:flex;gap:.75rem;justify-content:space-between;margin-top:1.5rem">
         <button type="button" class="btn btn-outline" style="color:var(--red);border-color:rgba(248,113,113,0.3)" onclick="clearAccountTag()">Remove Tag</button>
         <div style="display:flex;gap:.75rem">
           <button type="button" class="btn btn-outline" onclick="closeEditAccountModal()">Cancel</button>
           <button type="submit" class="btn btn-primary">Save Account</button>
         </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EDIT PAYEE MODAL -->
+<div class="modal-overlay" id="payeeEditModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">&#128101; Edit Payee / Sender</div>
+      <button class="modal-close" onclick="closeEditPayeeModal()">&times;</button>
+    </div>
+    <form onsubmit="savePayeeEdit(event)">
+      <input type="hidden" id="editPayeeId">
+      
+      <div class="form-group">
+        <label class="form-label">Payee / Account Identifier</label>
+        <input type="text" class="form-input" id="editPayeeIdDisplay" readonly style="opacity:0.85;background:var(--surface3);cursor:not-allowed">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Display Name / Alias</label>
+        <input type="text" class="form-input" id="editPayeeName" placeholder="e.g. Swiggy, Landlord, Electricity Board">
+      </div>
+
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+          <label class="form-label" style="margin-bottom:0">Assigned Category</label>
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:0.75rem;padding:0.1rem 0.4rem" onclick="openAddCategoryModal('payee')">+ New Category</button>
+        </div>
+        <select class="form-input" id="editPayeeCategory"></select>
+      </div>
+
+      <div class="rec-toggle-container" style="margin:1rem 0;background:var(--surface2);padding:.65rem .85rem;border-radius:8px">
+        <label class="rec-toggle-wrap" style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+          <input type="checkbox" id="editPayeeUpdateTxns" checked style="accent-color:var(--accent2);width:16px;height:16px">
+          <span class="rec-toggle-label" style="font-size:.82rem">Apply this category to all past transactions for this payee</span>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:.75rem;justify-content:space-between;margin-top:1.5rem">
+        <button type="button" class="btn btn-outline" style="color:var(--red);border-color:rgba(248,113,113,0.3)" onclick="clearPayeeCategory()">Remove Category</button>
+        <div style="display:flex;gap:.75rem">
+          <button type="button" class="btn btn-outline" onclick="closeEditPayeeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Payee</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CREATE CATEGORY MODAL -->
+<div class="modal-overlay" id="addCategoryModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">&#128193; Create Custom Category</div>
+      <button class="modal-close" onclick="closeAddCategoryModal()">&times;</button>
+    </div>
+    <form onsubmit="saveCustomCategory(event)">
+      <div class="form-group">
+        <label class="form-label">Category Name</label>
+        <input type="text" class="form-input" id="newCatName" placeholder="e.g. Pets, Fitness, Subscriptions" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Icon / Emoji</label>
+          <input type="text" class="form-input" id="newCatIcon" placeholder="e.g. 🐶" value="🏷️" required maxlength="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <input type="color" class="form-input" id="newCatColor" value="#38bdf8" style="height:42px;padding:2px 6px">
+        </div>
+      </div>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem">
+        <button type="button" class="btn btn-outline" onclick="closeAddCategoryModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Category</button>
       </div>
     </form>
   </div>
@@ -778,7 +872,7 @@ input,select,textarea{font-family:inherit}
 // ============================================================
 // CATEGORIES & AUTO-CATEGORIZATION
 // ============================================================
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   {id:'food',name:'Food & Dining',color:'#fb923c',icon:'&#127829;'},
   {id:'groceries',name:'Groceries',color:'#34d399',icon:'&#128722;'},
   {id:'transport',name:'Transport',color:'#38bdf8',icon:'&#128663;'},
@@ -794,7 +888,14 @@ const CATEGORIES = [
   {id:'transfer',name:'Transfer',color:'#94a3b8',icon:'&#128257;'},
   {id:'other',name:'Other',color:'#71717a',icon:'&#128230;'},
 ];
-const CAT_MAP = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+let CATEGORIES = [...DEFAULT_CATEGORIES];
+let CAT_MAP = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+
+function refreshCategoriesList(){
+  CATEGORIES = [...DEFAULT_CATEGORIES, ...(customCategories||[])];
+  CAT_MAP = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+  initCategoryDropdowns();
+}
 
 const CAT_RULES = [
   {cat:'salary',kw:['salary','payroll','wages','income','bonus','stipend','freelance','consulting fee']},
@@ -824,8 +925,14 @@ const RECURRING_HINTS = [
   {kw:['salary','payroll'],freq:'monthly'},
 ];
 
-function autoCategory(desc){
-  const d=desc.toLowerCase();
+function autoCategory(desc, targetAccount, accountNumber){
+  if(targetAccount && typeof payeeCategories !== 'undefined' && payeeCategories[targetAccount]){
+    return payeeCategories[targetAccount];
+  }
+  if(accountNumber && typeof accountCustom !== 'undefined' && accountCustom[accountNumber]?.defaultCategory){
+    return accountCustom[accountNumber].defaultCategory;
+  }
+  const d=(desc||'').toLowerCase();
   for(const rule of CAT_RULES){if(rule.kw.some(k=>d.includes(k)))return rule.cat;}
   return 'other';
 }
@@ -958,7 +1065,7 @@ const BankMessageParser = {
       }
     }
 
-    const category=autoCategory(description);
+    const category=autoCategory(description, targetAccount, accountNumber);
     const id=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2);
     const tx={
       id, date:new Date().toISOString(),
@@ -1030,6 +1137,8 @@ function load(){try{transactions=JSON.parse(localStorage.getItem(LS_KEY))||[];}c
 }
 let accountAliases = {};
 let accountCustom = {};
+let payeeCategories = {};
+let customCategories = [];
 
 function loadAppSettings(){
   try{
@@ -1037,13 +1146,21 @@ function loadAppSettings(){
     if(s.autoRecurringEnabled === undefined) s.autoRecurringEnabled = true;
     if(!s.accountAliases) s.accountAliases = {};
     if(!s.accountCustom) s.accountCustom = {};
+    if(!s.payeeCategories) s.payeeCategories = {};
+    if(!s.customCategories) s.customCategories = [];
     accountAliases = s.accountAliases;
     accountCustom = s.accountCustom;
+    payeeCategories = s.payeeCategories;
+    customCategories = s.customCategories;
+    refreshCategoriesList();
     return s;
   }catch(e){
     accountAliases = {};
     accountCustom = {};
-    return {autoRecurringEnabled: true, accountAliases: {}, accountCustom: {}};
+    payeeCategories = {};
+    customCategories = [];
+    refreshCategoriesList();
+    return {autoRecurringEnabled: true, accountAliases: {}, accountCustom: {}, payeeCategories: {}, customCategories: []};
   }
 }
 function saveAppSettings(){
@@ -1056,6 +1173,8 @@ function saveAppSettings(){
   if(curEl) s.currency = curEl.value;
   s.accountAliases = accountAliases;
   s.accountCustom = accountCustom;
+  s.payeeCategories = payeeCategories;
+  s.customCategories = customCategories;
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
   updateCurrencyGlobal();
   showToast('Settings saved','success');
@@ -1445,6 +1564,7 @@ function renderAll(){
   renderReminders();
   renderInsights();
   populateAccountFilter();
+  renderSettingsCategories();
   document.getElementById('txCountFooter').textContent=transactions.length;
 }
 
@@ -1567,6 +1687,8 @@ function renderAccounts(){
     const badge=custom.tag !== undefined ? custom.tag : (acctInfo?.badge||'');
     const badgeColor=custom.tagColor || acctInfo?.badgeColor || 'var(--accent)';
     const bankName=custom.bank || a.bank || acctInfo?.bank || 'Bank';
+    const defCatId=custom.defaultCategory || (acctInfo?.cats && acctInfo.cats[0]) || '';
+    const defCat=defCatId ? CAT_MAP[defCatId] : null;
     const catEntries=Object.entries(a.cats).sort((x,y)=>y[1]-x[1]).slice(0,4);
     const maxCatVal=catEntries.length?catEntries[0][1]:1;
     const miniBars=catEntries.map(([cid,val])=>{const ci=CAT_MAP[cid];return ci?`<div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text3)"><span>${ci.icon}</span><div style="flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden"><div style="height:100%;width:${(val/maxCatVal*100).toFixed(0)}%;background:${ci.color};border-radius:2px"></div></div><span>${fmt(val)}</span></div>`:''}).join('');
@@ -1577,7 +1699,10 @@ function renderAccounts(){
             <span style="font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.accountNumber}</span>
             <button class="btn btn-ghost btn-sm" style="padding:0.15rem 0.4rem;font-size:0.75rem;border-radius:4px;line-height:1" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Edit account tag and details">✎ Edit</button>
           </div>
-          <div style="font-size:.78rem;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${bankName} &middot; ${label}</div>
+          <div style="font-size:.78rem;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
+            <span>${bankName} &middot; ${label}</span>
+            ${defCat?`<span class="tx-cat" style="font-size:.65rem;padding:.1rem .45rem;background:${defCat.color}22;color:${defCat.color}">${defCat.icon} ${defCat.name}</span>`:''}
+          </div>
         </div>
         <div>
           ${badge?`<span style="font-size:.7rem;font-weight:600;padding:.2rem .6rem;border-radius:999px;background:${badgeColor}22;color:${badgeColor};cursor:pointer;white-space:nowrap" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Click to edit tag">${badge}</span>`:`<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;border:1px dashed var(--border)" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Add Tag">+ Tag</button>`}
@@ -1599,9 +1724,19 @@ function renderAccounts(){
     const namesArr=Array.from(t.names);
     const dispName=alias || (namesArr.length?namesArr[0]:t.targetAccount);
     const subName=alias ? t.targetAccount : (namesArr.length?t.targetAccount:'Unknown');
+    const catId = payeeCategories[t.targetAccount];
+    const cat = catId ? (CAT_MAP[catId] || CAT_MAP.other) : null;
     return`<div class="account-card" style="cursor:pointer" onclick="filterByPayee(event, '${t.targetAccount}')">
-      <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="event.stopPropagation(); renameAccount('${t.targetAccount}')" title="Click to rename payee">${dispName} <span style="font-size:0.7rem;color:var(--accent)">✎</span></div>
-      <div style="font-size:.8rem;color:var(--text3);margin-bottom:.6rem;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subName}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;gap:.5rem">
+        <div style="min-width:0;flex:1">
+          <div style="font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dispName}</div>
+          <div style="font-size:.8rem;color:var(--text3);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subName}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="padding:0.15rem 0.4rem;font-size:0.75rem;border-radius:4px;line-height:1;flex-shrink:0" onclick="event.stopPropagation(); openEditPayeeModal('${t.targetAccount}')" title="Edit payee name and category">✎ Edit</button>
+      </div>
+      <div style="margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem">
+        ${cat?`<span class="tx-cat" style="background:${cat.color}22;color:${cat.color};cursor:pointer" onclick="event.stopPropagation(); openEditPayeeModal('${t.targetAccount}')" title="Click to change category">${cat.icon} ${cat.name}</span>`:`<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .55rem;border-radius:999px;border:1px dashed var(--border)" onclick="event.stopPropagation(); openEditPayeeModal('${t.targetAccount}')" title="Assign category">+ Category</button>`}
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.82rem">
         <div>Sent To Them<br><span class="text-red" style="font-weight:700">${fmt(t.expense)}</span></div>
         <div>Received From<br><span class="text-green" style="font-weight:700">${fmt(t.income)}</span></div>
@@ -1619,6 +1754,7 @@ function openEditAccountModal(accNum){
   const initialLabel = custom.label !== undefined ? custom.label : (acctInfo?.label || '');
   const initialTag = custom.tag !== undefined ? custom.tag : (acctInfo?.badge || '');
   const initialColor = custom.tagColor || acctInfo?.badgeColor || 'var(--accent)';
+  const initialCat = custom.defaultCategory || (acctInfo?.cats && acctInfo.cats[0]) || '';
 
   document.getElementById('editAccId').value = accNum;
   document.getElementById('editAccNumberDisplay').value = accNum;
@@ -1626,6 +1762,9 @@ function openEditAccountModal(accNum){
   document.getElementById('editAccLabel').value = initialLabel;
   document.getElementById('editAccTag').value = initialTag;
   document.getElementById('editAccTagColor').value = initialColor;
+  if(document.getElementById('editAccCategory')) {
+    document.getElementById('editAccCategory').value = initialCat;
+  }
 
   updateTagPreview();
   document.getElementById('accountEditModal').classList.add('show');
@@ -1683,13 +1822,15 @@ function saveAccountEdit(e){
   const label = document.getElementById('editAccLabel').value.trim();
   const tag = document.getElementById('editAccTag').value.trim();
   const tagColor = document.getElementById('editAccTagColor').value;
+  const defaultCategory = document.getElementById('editAccCategory') ? document.getElementById('editAccCategory').value : '';
 
   if(!accountCustom[accNum]) accountCustom[accNum] = {};
   accountCustom[accNum] = {
     bank: bank || (accountCustom[accNum]?.bank || ''),
     label: label,
     tag: tag,
-    tagColor: tagColor || 'var(--accent)'
+    tagColor: tagColor || 'var(--accent)',
+    defaultCategory: defaultCategory
   };
 
   // Sync to transactions that have this account number
@@ -1708,14 +1849,138 @@ function saveAccountEdit(e){
   showToast(`Account ${accNum} updated successfully`, 'success');
 }
 
-function renameAccount(acc) {
-  const newName = prompt(`Enter a name for account/UPI ${acc}`, accountAliases[acc] || '');
-  if(newName !== null) {
-    if(newName.trim() === '') delete accountAliases[acc];
-    else accountAliases[acc] = newName.trim();
-    saveAppSettings();
-    renderAll();
+function openEditPayeeModal(targetAccount){
+  const alias = accountAliases[targetAccount] || '';
+  const currentCat = payeeCategories[targetAccount] || '';
+
+  document.getElementById('editPayeeId').value = targetAccount;
+  document.getElementById('editPayeeIdDisplay').value = targetAccount;
+  document.getElementById('editPayeeName').value = alias;
+  if(document.getElementById('editPayeeCategory')) {
+    document.getElementById('editPayeeCategory').value = currentCat;
   }
+  document.getElementById('editPayeeUpdateTxns').checked = true;
+  document.getElementById('payeeEditModal').classList.add('show');
+}
+
+function closeEditPayeeModal(){
+  document.getElementById('payeeEditModal').classList.remove('show');
+}
+
+function clearPayeeCategory(){
+  const payeeId = document.getElementById('editPayeeId').value;
+  if(payeeId){
+    delete payeeCategories[payeeId];
+    saveAppSettings();
+  }
+  if(document.getElementById('editPayeeCategory')) {
+    document.getElementById('editPayeeCategory').value = '';
+  }
+  closeEditPayeeModal();
+  renderAll();
+  showToast('Payee category removed', 'info');
+}
+
+function savePayeeEdit(e){
+  e.preventDefault();
+  const payeeId = document.getElementById('editPayeeId').value;
+  if(!payeeId) return;
+  const name = document.getElementById('editPayeeName').value.trim();
+  const cat = document.getElementById('editPayeeCategory').value;
+  const updateTxns = document.getElementById('editPayeeUpdateTxns').checked;
+
+  if(name) {
+    accountAliases[payeeId] = name;
+  } else {
+    delete accountAliases[payeeId];
+  }
+
+  if(cat) {
+    payeeCategories[payeeId] = cat;
+  } else {
+    delete payeeCategories[payeeId];
+  }
+
+  if(updateTxns && cat){
+    let count = 0;
+    transactions.forEach(t=>{
+      if((t.targetAccount || '') === payeeId){
+        t.category = cat;
+        count++;
+      }
+    });
+    if(count > 0) save();
+  }
+
+  saveAppSettings();
+  closeEditPayeeModal();
+  renderAll();
+  showToast(`Payee ${name || payeeId} saved`, 'success');
+}
+
+function renameAccount(acc) {
+  openEditPayeeModal(acc);
+}
+
+let categoryCreationCaller = null;
+
+function openAddCategoryModal(caller){
+  categoryCreationCaller = caller || null;
+  document.getElementById('newCatName').value = '';
+  document.getElementById('newCatIcon').value = '🏷️';
+  document.getElementById('newCatColor').value = '#38bdf8';
+  document.getElementById('addCategoryModal').classList.add('show');
+}
+
+function closeAddCategoryModal(){
+  document.getElementById('addCategoryModal').classList.remove('show');
+}
+
+function saveCustomCategory(e){
+  e.preventDefault();
+  const name = document.getElementById('newCatName').value.trim();
+  const icon = document.getElementById('newCatIcon').value.trim() || '🏷️';
+  const color = document.getElementById('newCatColor').value || '#38bdf8';
+  if(!name) return;
+
+  const id = 'custom_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).slice(2, 6);
+  const newCat = { id, name, icon, color };
+  customCategories.push(newCat);
+
+  saveAppSettings();
+  refreshCategoriesList();
+  closeAddCategoryModal();
+
+  if(categoryCreationCaller === 'payee' && document.getElementById('editPayeeCategory')) {
+    document.getElementById('editPayeeCategory').value = id;
+  } else if(categoryCreationCaller === 'account' && document.getElementById('editAccCategory')) {
+    document.getElementById('editAccCategory').value = id;
+  } else if(document.getElementById('addCat')) {
+    document.getElementById('addCat').value = id;
+  }
+
+  showToast(`Category "${name}" created!`, 'success');
+}
+
+function renderSettingsCategories(){
+  const el = document.getElementById('settingsCategoriesList');
+  if(!el) return;
+  el.innerHTML = CATEGORIES.map(c => {
+    const isCustom = (customCategories||[]).some(x => x.id === c.id);
+    return `<span class="tx-cat" style="background:${c.color}22;color:${c.color};font-size:0.75rem;display:inline-flex;align-items:center;gap:0.3rem">
+      ${c.icon} ${c.name}
+      ${isCustom ? `<span style="cursor:pointer;font-weight:bold;margin-left:2px;opacity:0.7" onclick="deleteCustomCategory('${c.id}')" title="Delete custom category">&times;</span>` : ''}
+    </span>`;
+  }).join('');
+}
+
+function deleteCustomCategory(id){
+  if(!confirm('Delete this custom category?')) return;
+  customCategories = customCategories.filter(c => c.id !== id);
+  saveAppSettings();
+  refreshCategoriesList();
+  renderAll();
+  showToast('Category deleted', 'info');
 }
 
 function filterByAccount(acct){
@@ -1725,11 +1990,9 @@ function filterByAccount(acct){
 }
 
 function filterByPayee(event, payee) {
-  // Prevent firing if they clicked the rename button
-  if (event && event.target.closest && event.target.closest('[onclick^="renameAccount"]')) return;
+  if (event && event.target.closest && (event.target.closest('[onclick*="openEditPayeeModal"]') || event.target.closest('[onclick*="renameAccount"]'))) return;
   document.getElementById('txSearch').value = payee;
   document.querySelector('[data-page="transactions"]').click();
-  // Call renderTransactions() manually or trigger an input event
   renderTransactions();
 }
 
@@ -2478,16 +2741,37 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
 // INIT
 // ============================================================
 function initCategoryDropdowns(){
-  document.getElementById('txFilterCat').innerHTML='<option value="all">All Categories</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
-  document.getElementById('addCat').innerHTML=CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+  const filterCatEl = document.getElementById('txFilterCat');
+  if(filterCatEl) {
+    const prev = filterCatEl.value;
+    filterCatEl.innerHTML='<option value="all">All Categories</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    if(prev) filterCatEl.value = prev;
+  }
+  const addCatEl = document.getElementById('addCat');
+  if(addCatEl) {
+    const prev = addCatEl.value;
+    addCatEl.innerHTML=CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    if(prev) addCatEl.value = prev;
+  }
+  const editAccCatEl = document.getElementById('editAccCategory');
+  if(editAccCatEl) {
+    const prev = editAccCatEl.value;
+    editAccCatEl.innerHTML='<option value="">-- None (Mixed / General) --</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    if(prev) editAccCatEl.value = prev;
+  }
+  const editPayeeCatEl = document.getElementById('editPayeeCategory');
+  if(editPayeeCatEl) {
+    const prev = editPayeeCatEl.value;
+    editPayeeCatEl.innerHTML='<option value="">-- Unassigned --</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    if(prev) editPayeeCatEl.value = prev;
+  }
 }
 
+// Restore settings first so custom categories & customizations are loaded
+const _s=loadAppSettings();
 initCategoryDropdowns();
 load();
 renderAll();
-
-// Restore settings
-const _s=loadAppSettings();
 if(typeof updateCurrencyGlobal==='function') updateCurrencyGlobal();
 if(_s.googleClientId) {
   document.getElementById('googleClientId').value=_s.googleClientId;
