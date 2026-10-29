@@ -670,6 +670,13 @@ input,select,textarea{font-family:inherit}
         </div>
       </div>
 
+      <div class="rec-toggle-container" style="margin:1rem 0;background:var(--surface2);padding:.65rem .85rem;border-radius:8px">
+        <label class="rec-toggle-wrap" style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+          <input type="checkbox" id="editAccUpdateTxns" checked style="accent-color:var(--accent2);width:16px;height:16px">
+          <span class="rec-toggle-label" style="font-size:.82rem">Apply default category to all existing transactions on this account</span>
+        </label>
+      </div>
+
       <div style="display:flex;gap:.75rem;justify-content:space-between;margin-top:1.5rem">
         <button type="button" class="btn btn-outline" style="color:var(--red);border-color:rgba(248,113,113,0.3)" onclick="clearAccountTag()">Remove Tag</button>
         <div style="display:flex;gap:.75rem">
@@ -926,8 +933,13 @@ const RECURRING_HINTS = [
 ];
 
 function autoCategory(desc, targetAccount, accountNumber){
-  if(targetAccount && typeof payeeCategories !== 'undefined' && payeeCategories[targetAccount]){
-    return payeeCategories[targetAccount];
+  if(targetAccount && typeof payeeCategories !== 'undefined'){
+    const pCat = payeeCategories[targetAccount] || payeeCategories[targetAccount.toLowerCase().trim()];
+    if(pCat) return pCat;
+  }
+  if(desc && typeof payeeCategories !== 'undefined'){
+    const dLower = (desc||'').toLowerCase().trim();
+    if(payeeCategories[dLower]) return payeeCategories[dLower];
   }
   if(accountNumber && typeof accountCustom !== 'undefined' && accountCustom[accountNumber]?.defaultCategory){
     return accountCustom[accountNumber].defaultCategory;
@@ -1140,31 +1152,26 @@ let accountCustom = {};
 let payeeCategories = {};
 let customCategories = [];
 
-function loadAppSettings(){
+function getStoredSettings(){
   try{
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY))||{};
-    if(s.autoRecurringEnabled === undefined) s.autoRecurringEnabled = true;
-    if(!s.accountAliases) s.accountAliases = {};
-    if(!s.accountCustom) s.accountCustom = {};
-    if(!s.payeeCategories) s.payeeCategories = {};
-    if(!s.customCategories) s.customCategories = [];
-    accountAliases = s.accountAliases;
-    accountCustom = s.accountCustom;
-    payeeCategories = s.payeeCategories;
-    customCategories = s.customCategories;
-    refreshCategoriesList();
-    return s;
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{};
   }catch(e){
-    accountAliases = {};
-    accountCustom = {};
-    payeeCategories = {};
-    customCategories = [];
-    refreshCategoriesList();
-    return {autoRecurringEnabled: true, accountAliases: {}, accountCustom: {}, payeeCategories: {}, customCategories: []};
+    return {};
   }
 }
-function saveAppSettings(){
-  const s=loadAppSettings();
+
+function loadAppSettings(){
+  const s = getStoredSettings();
+  if(s.autoRecurringEnabled === undefined) s.autoRecurringEnabled = true;
+  accountAliases = s.accountAliases || {};
+  accountCustom = s.accountCustom || {};
+  payeeCategories = s.payeeCategories || {};
+  customCategories = s.customCategories || [];
+  refreshCategoriesList();
+  return s;
+}
+function saveAppSettings(silent=false){
+  const s = getStoredSettings();
   const cidEl = document.getElementById('googleClientId');
   if(cidEl) s.googleClientId = cidEl.value.trim();
   const autoEl = document.getElementById('autoRecurringToggle');
@@ -1177,7 +1184,7 @@ function saveAppSettings(){
   s.customCategories = customCategories;
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
   updateCurrencyGlobal();
-  showToast('Settings saved','success');
+  if(!silent) showToast('Settings saved','success');
   renderAll();
   refreshGoogleAuth();
 }
@@ -1311,7 +1318,7 @@ function intervalToFreq(days){
 }
 
 function detectRecurring(txns){
-  const _s = loadAppSettings();
+  const _s = getStoredSettings();
   if(_s.autoRecurringEnabled === false) return;
   // Group by target account or description
   const groups={};
@@ -1536,7 +1543,7 @@ function svgLineChart(txns){
 // Global currency formatter
 const CURRENCY_MAP={INR:{sym:'₹',loc:'en-IN'},USD:{sym:'$',loc:'en-US'},CAD:{sym:'C$',loc:'en-CA'},EUR:{sym:'€',loc:'de-DE'},GBP:{sym:'£',loc:'en-GB'},AUD:{sym:'A$',loc:'en-AU'}};
 let CURRENT_CURRENCY=CURRENCY_MAP.INR;
-function updateCurrencyGlobal(){const s=loadAppSettings();CURRENT_CURRENCY=CURRENCY_MAP[s.currency||'INR']||CURRENCY_MAP.INR;}
+function updateCurrencyGlobal(){const s=getStoredSettings();CURRENT_CURRENCY=CURRENCY_MAP[s.currency||'INR']||CURRENCY_MAP.INR;}
 function fmt(n){return CURRENT_CURRENCY.sym+Number(n).toLocaleString(CURRENT_CURRENCY.loc,{minimumFractionDigits:0,maximumFractionDigits:0});}
 function fmtDate(d){return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
 function fmtDateTime(d){if(!d)return'';const dt=new Date(d);if(isNaN(dt.getTime()))return d;return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+(d.includes('T')?', '+dt.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'');}
@@ -1699,14 +1706,16 @@ function renderAccounts(){
             <span style="font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.accountNumber}</span>
             <button class="btn btn-ghost btn-sm" style="padding:0.15rem 0.4rem;font-size:0.75rem;border-radius:4px;line-height:1" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Edit account tag and details">✎ Edit</button>
           </div>
-          <div style="font-size:.78rem;color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:.35rem;flex-wrap:wrap">
-            <span>${bankName} &middot; ${label}</span>
-            ${defCat?`<span class="tx-cat" style="font-size:.65rem;padding:.1rem .45rem;background:${defCat.color}22;color:${defCat.color}">${defCat.icon} ${defCat.name}</span>`:''}
+          <div style="font-size:.78rem;color:var(--text3);margin-top:2px">
+            ${bankName} &middot; ${label}
           </div>
         </div>
-        <div>
-          ${badge?`<span style="font-size:.7rem;font-weight:600;padding:.2rem .6rem;border-radius:999px;background:${badgeColor}22;color:${badgeColor};cursor:pointer;white-space:nowrap" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Click to edit tag">${badge}</span>`:`<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;border:1px dashed var(--border)" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Add Tag">+ Tag</button>`}
+        <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;justify-content:flex-end">
+          ${badge?`<span style="font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:999px;background:${badgeColor}22;color:${badgeColor};cursor:pointer;white-space:nowrap;border:1px solid ${badgeColor}44" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Click to edit tag">${badge}</span>`:`<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;border:1px dashed var(--border)" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Add Tag">+ Tag</button>`}
         </div>
+      </div>
+      <div style="margin-bottom:.65rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+        ${defCat?`<span class="tx-cat" style="font-size:.72rem;padding:.2rem .6rem;background:${defCat.color}22;color:${defCat.color};cursor:pointer;white-space:nowrap;border:1px solid ${defCat.color}33" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Click to edit default category">${defCat.icon} ${defCat.name}</span>`:`<button class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:.15rem .5rem;border-radius:999px;border:1px dashed var(--border)" onclick="event.stopPropagation(); openEditAccountModal('${a.accountNumber}')" title="Assign Default Category">+ Category</button>`}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.4rem;font-size:.82rem;margin-bottom:.6rem">
         <div>Income<br><span class="text-green" style="font-weight:700">${fmt(a.income)}</span></div>
@@ -1724,7 +1733,7 @@ function renderAccounts(){
     const namesArr=Array.from(t.names);
     const dispName=alias || (namesArr.length?namesArr[0]:t.targetAccount);
     const subName=alias ? t.targetAccount : (namesArr.length?t.targetAccount:'Unknown');
-    const catId = payeeCategories[t.targetAccount];
+    const catId = payeeCategories[t.targetAccount] || payeeCategories[t.targetAccount.toLowerCase().trim()];
     const cat = catId ? (CAT_MAP[catId] || CAT_MAP.other) : null;
     return`<div class="account-card" style="cursor:pointer" onclick="filterByPayee(event, '${t.targetAccount}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;gap:.5rem">
@@ -1764,6 +1773,9 @@ function openEditAccountModal(accNum){
   document.getElementById('editAccTagColor').value = initialColor;
   if(document.getElementById('editAccCategory')) {
     document.getElementById('editAccCategory').value = initialCat;
+  }
+  if(document.getElementById('editAccUpdateTxns')) {
+    document.getElementById('editAccUpdateTxns').checked = true;
   }
 
   updateTagPreview();
@@ -1805,7 +1817,7 @@ function clearAccountTag(){
   if(accNum){
     if(!accountCustom[accNum]) accountCustom[accNum] = {};
     accountCustom[accNum].tag = '';
-    saveAppSettings();
+    saveAppSettings(true);
   }
   document.getElementById('editAccTag').value = '';
   updateTagPreview();
@@ -1823,6 +1835,7 @@ function saveAccountEdit(e){
   const tag = document.getElementById('editAccTag').value.trim();
   const tagColor = document.getElementById('editAccTagColor').value;
   const defaultCategory = document.getElementById('editAccCategory') ? document.getElementById('editAccCategory').value : '';
+  const updateTxns = document.getElementById('editAccUpdateTxns') ? document.getElementById('editAccUpdateTxns').checked : false;
 
   if(!accountCustom[accNum]) accountCustom[accNum] = {};
   accountCustom[accNum] = {
@@ -1839,11 +1852,12 @@ function saveAccountEdit(e){
     if((t.accountNumber||'') === accNum){
       if(bank) { t.bank = bank; txUpdated = true; }
       if(label) { t.accountLabel = label; txUpdated = true; }
+      if(updateTxns && defaultCategory) { t.category = defaultCategory; txUpdated = true; }
     }
   });
   if(txUpdated) save();
 
-  saveAppSettings();
+  saveAppSettings(true);
   closeEditAccountModal();
   renderAll();
   showToast(`Account ${accNum} updated successfully`, 'success');
@@ -1851,7 +1865,7 @@ function saveAccountEdit(e){
 
 function openEditPayeeModal(targetAccount){
   const alias = accountAliases[targetAccount] || '';
-  const currentCat = payeeCategories[targetAccount] || '';
+  const currentCat = payeeCategories[targetAccount] || payeeCategories[targetAccount.toLowerCase().trim()] || '';
 
   document.getElementById('editPayeeId').value = targetAccount;
   document.getElementById('editPayeeIdDisplay').value = targetAccount;
@@ -1871,7 +1885,8 @@ function clearPayeeCategory(){
   const payeeId = document.getElementById('editPayeeId').value;
   if(payeeId){
     delete payeeCategories[payeeId];
-    saveAppSettings();
+    delete payeeCategories[payeeId.toLowerCase().trim()];
+    saveAppSettings(true);
   }
   if(document.getElementById('editPayeeCategory')) {
     document.getElementById('editPayeeCategory').value = '';
@@ -1897,14 +1912,19 @@ function savePayeeEdit(e){
 
   if(cat) {
     payeeCategories[payeeId] = cat;
+    payeeCategories[payeeId.toLowerCase().trim()] = cat;
   } else {
     delete payeeCategories[payeeId];
+    delete payeeCategories[payeeId.toLowerCase().trim()];
   }
 
   if(updateTxns && cat){
     let count = 0;
+    const pLower = payeeId.toLowerCase().trim();
     transactions.forEach(t=>{
-      if((t.targetAccount || '') === payeeId){
+      const tTgt = (t.targetAccount || '').toLowerCase().trim();
+      const tDesc = (t.description || '').toLowerCase().trim();
+      if(tTgt === pLower || (pLower.length >= 3 && (tDesc === pLower || tDesc.includes(pLower)))){
         t.category = cat;
         count++;
       }
@@ -1912,7 +1932,7 @@ function savePayeeEdit(e){
     if(count > 0) save();
   }
 
-  saveAppSettings();
+  saveAppSettings(true);
   closeEditPayeeModal();
   renderAll();
   showToast(`Payee ${name || payeeId} saved`, 'success');
@@ -1947,7 +1967,7 @@ function saveCustomCategory(e){
   const newCat = { id, name, icon, color };
   customCategories.push(newCat);
 
-  saveAppSettings();
+  saveAppSettings(true);
   refreshCategoriesList();
   closeAddCategoryModal();
 
@@ -2194,7 +2214,7 @@ function importSmsTransactions(){
 // gmailAccounts: array of { idx, email, tokenClient, accessToken, connected }
 let gmailAccounts=[];
 
-function getGoogleClientId(){return (loadAppSettings().googleClientId||'').trim();}
+function getGoogleClientId(){return (getStoredSettings().googleClientId||'').trim();}
 
 function refreshGoogleAuth(){
   const cid=getGoogleClientId();
@@ -2208,7 +2228,7 @@ function refreshGoogleAuth(){
   if(addBtn)addBtn.style.display='';
   if(needEl)needEl.style.display='none';
   // Restore saved emails
-  const s=loadAppSettings();
+  const s=getStoredSettings();
   const saved=s.gmailEmails||[];
   // Re-create token clients for saved emails that aren't already connected
   saved.forEach(email=>{
@@ -2255,7 +2275,7 @@ function handleGToken(resp, idx){
     .then(r=>r.json()).then(info=>{
       acct.email=info.email||'Account '+(idx+1);
       // Persist email list
-      const s=loadAppSettings();
+      const s=getStoredSettings();
       s.gmailEmails=[...new Set((s.gmailEmails||[]).concat([acct.email]))];
       localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
       renderGmailAccountsList();
@@ -2274,7 +2294,7 @@ function disconnectGmailAccount(idx){
   if(!acct)return;
   if(acct.accessToken&&typeof google!=='undefined')google.accounts.oauth2.revoke(acct.accessToken);
   // Remove from saved list
-  const s=loadAppSettings();
+  const s=getStoredSettings();
   s.gmailEmails=(s.gmailEmails||[]).filter(e=>e!==acct.email);
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
   gmailAccounts.splice(idx,1);
@@ -2568,14 +2588,14 @@ function notifyViaCalendar(){
 }
 
 function markReminderNotified(r){
-  const s=loadAppSettings();const today=new Date().toISOString().split('T')[0];
+  const s=getStoredSettings();const today=new Date().toISOString().split('T')[0];
   if(!s.notifiedReminders)s.notifiedReminders={};
   s.notifiedReminders[r.description.toLowerCase().trim()+'_'+today]=true;
   localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
 }
 
 function cleanupNotificationTracking(){
-  const s=loadAppSettings();const nr=s.notifiedReminders||{};
+  const s=getStoredSettings();const nr=s.notifiedReminders||{};
   const cutoff=new Date(Date.now()-7*864e5).toISOString().split('T')[0];
   Object.keys(nr).forEach(k=>{const d=k.split('_').pop();if(d<cutoff)delete nr[k];});
   s.notifiedReminders=nr;localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));
@@ -2587,7 +2607,7 @@ function checkDueReminders(){
   const now=new Date(),threeDays=3*864e5;
   const due=rem.filter(r=>{const diff=r.nextDate.getTime()-now.getTime();return diff>=0&&diff<=threeDays;});
   if(!due.length)return;
-  const s=loadAppSettings(),today=now.toISOString().split('T')[0],nr=s.notifiedReminders||{};
+  const s=getStoredSettings(),today=now.toISOString().split('T')[0],nr=s.notifiedReminders||{};
   const unnotified=due.filter(r=>!nr[r.description.toLowerCase().trim()+'_'+today]);
   if(!unnotified.length)return;
   if(unnotified.length===1){const r=unnotified[0];const dateStr=r.nextDate.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});new Notification('WiseSpender: Payment Due Soon',{body:`${r.description} — ${fmt(r.expectedAmount)} due ${dateStr}`,icon:NOTIFY_ICON,tag:'wisespender-due'});}
