@@ -569,6 +569,10 @@ input,select,textarea{font-family:inherit}
           <input type="text" id="editAccNum" class="form-input" placeholder="e.g. XX1234">
         </div>
       </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-input" id="editCat"></select>
+      </div>
       <div class="rec-toggle-container" style="margin:1rem 0">
         <label class="rec-toggle-wrap">
           <input type="checkbox" id="editIsRecurring" onchange="toggleEditRecurringFreq()">
@@ -2661,6 +2665,7 @@ function openEditModal(id){
   document.getElementById('editDesc').value=t.description;
   if(document.getElementById('editBank')) document.getElementById('editBank').value=t.bank||'';
   if(document.getElementById('editAccNum')) document.getElementById('editAccNum').value=t.accountNumber||'';
+  if(document.getElementById('editCat')) document.getElementById('editCat').value=t.category||'other';
   document.getElementById('editIsRecurring').checked=t.isRecurring;
   document.getElementById('editExcludeFromTotals').checked=!!t.excludeFromTotals;
   editRecFreq=t.recurringType||null;
@@ -2691,6 +2696,8 @@ function saveEditTransaction(e){
   if(bankEl && bankEl.value.trim()) t.bank = bankEl.value.trim();
   const accEl = document.getElementById('editAccNum');
   if(accEl) t.accountNumber = accEl.value.trim();
+  const catEl = document.getElementById('editCat');
+  if(catEl && catEl.value) t.category = catEl.value;
   t.isRecurring=document.getElementById('editIsRecurring').checked;
   t.recurringType=t.isRecurring?editRecFreq:null;
   t.excludeFromTotals=document.getElementById('editExcludeFromTotals').checked;
@@ -2784,6 +2791,12 @@ function initCategoryDropdowns(){
     const prev = editPayeeCatEl.value;
     editPayeeCatEl.innerHTML='<option value="">-- Unassigned --</option>'+CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
     if(prev) editPayeeCatEl.value = prev;
+  }
+  const editCatEl = document.getElementById('editCat');
+  if(editCatEl) {
+    const prev = editCatEl.value;
+    editCatEl.innerHTML=CATEGORIES.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+    if(prev) editCatEl.value = prev;
   }
 }
 
