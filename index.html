@@ -893,7 +893,8 @@ const DEFAULT_CATEGORIES = [
   {id:'entertainment',name:'Entertainment',color:'#c084fc',icon:'&#127916;'},
   {id:'education',name:'Education',color:'#2dd4bf',icon:'&#127891;'},
   {id:'travel',name:'Travel',color:'#fbbf24',icon:'&#9992;&#65039;'},
-  {id:'insurance',name:'Insurance & EMI',color:'#64748b',icon:'&#128179;'},
+  {id:'insurance',name:'Insurance',color:'#0284c7',icon:'&#128737;'},
+  {id:'emi',name:'Loans & EMI',color:'#f43f5e',icon:'&#128179;'},
   {id:'investment',name:'Investment',color:'#22d3ee',icon:'&#128200;'},
   {id:'salary',name:'Salary',color:'#4ade80',icon:'&#128176;'},
   {id:'transfer',name:'Transfer',color:'#94a3b8',icon:'&#128257;'},
@@ -919,7 +920,8 @@ const CAT_RULES = [
   {cat:'entertainment',kw:['netflix','spotify','prime video','hotstar','movie','cinema','gaming','youtube premium','concert','subscription']},
   {cat:'education',kw:['course','udemy','coursera','tuition','school','college','university','books','exam','coaching']},
   {cat:'travel',kw:['flight','hotel','booking','airbnb','makemytrip','goibibo','trip','holiday','visa','travel']},
-  {cat:'insurance',kw:['emi','loan','insurance','lic','premium','sip','mutual fund emi','credit card bill']},
+  {cat:'insurance',kw:['insurance','lic','premium','policy','mediclaim','term plan','max life','hdfc life','star health','care health','health insurance','car insurance','bike insurance']},
+  {cat:'emi',kw:['emi','loan','home loan','car loan','personal loan','credit card bill','card bill','card payment','credit card emi','bajaj finance','hdb','muthoot','tatacapital']},
   {cat:'investment',kw:['investment','mutual fund','stock','share','zerodha','groww','nifty','sensex','fd','fixed deposit','ppf','nps']},
   {cat:'transfer',kw:['transfer','upi','neft','rtgs','imps','self transfer','sent to']},
 ];
@@ -1148,8 +1150,19 @@ const SETTINGS_KEY='wisespender_settings';
 
 function save(){localStorage.setItem(LS_KEY,JSON.stringify(transactions));}
 function load(){try{transactions=JSON.parse(localStorage.getItem(LS_KEY))||[];}catch(e){transactions=[];}
-  // Backfill fingerprints for old transactions that don't have them
-  transactions.forEach(t=>{if(!t.fingerprint)t.fingerprint=computeFingerprint(t);});
+  let needsSave = false;
+  transactions.forEach(t=>{
+    if(!t.fingerprint){ t.fingerprint=computeFingerprint(t); needsSave = true; }
+    // Migrate legacy 'insurance' category for loans/EMIs
+    if(t.category === 'insurance'){
+      const d = ((t.description||'') + ' ' + (t.targetAccount||'')).toLowerCase();
+      if(['emi','loan','card bill','home loan','car loan','personal loan','credit card bill','bajaj finance'].some(k=>d.includes(k))){
+        t.category = 'emi';
+        needsSave = true;
+      }
+    }
+  });
+  if(needsSave) save();
 }
 let accountAliases = {};
 let accountCustom = {};
@@ -1208,7 +1221,7 @@ function computeFingerprint(tx){
 const ACCOUNTS = [
   {id:'HDFC-SA-4521', bank:'HDFC',  label:'Salary Account',  type:'salary',  badge:'Salary',      badgeColor:'var(--green)',  cats:['salary']},
   {id:'ICICI-CC-8834',bank:'ICICI', label:'Credit Card',     type:'cc',      badge:'Credit Card', badgeColor:'var(--pink)',   cats:['shopping','food','entertainment','travel']},
-  {id:'SBI-SV-7612',  bank:'SBI',   label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--accent)', cats:['rent','insurance','investment']},
+  {id:'SBI-SV-7612',  bank:'SBI',   label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--accent)', cats:['rent','insurance','emi','investment']},
   {id:'Kotak-SV-2089',bank:'Kotak', label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--teal)',   cats:['groceries','transport','health','education']},
   {id:'Axis-WL-5500', bank:'Axis',  label:'Digital Wallet',  type:'wallet',  badge:'Wallet',      badgeColor:'var(--amber)',  cats:['transfer','other']},
 ];
@@ -1233,11 +1246,12 @@ function generateTestData(){
     entertainment:['Netflix Subscription','Spotify Premium','Movie Tickets - PVR','YouTube Premium'],
     education:['Udemy Course','Coursera Subscription','Book Purchase'],
     travel:['Flight Booking','Hotel Booking','MakeMyTrip Package'],
-    insurance:['LIC Premium','Health Insurance','Home Loan EMI','Credit Card Bill'],
+    insurance:['LIC Premium','Health Insurance','Term Life Insurance','Vehicle Insurance'],
+    emi:['Home Loan EMI','Car Loan EMI','Personal Loan EMI','Credit Card Bill'],
     investment:['SIP - Mutual Fund','Zerodha Trade','PPF Deposit','Fixed Deposit'],
     transfer:['Self Transfer','UPI to Savings','NEFT Transfer'],
   };
-  const ranges={salary:[45000,120000],rent:[2000,25000],food:[100,2500],groceries:[200,5000],transport:[50,3000],shopping:[300,15000],health:[100,8000],entertainment:[99,999],education:[500,10000],travel:[2000,30000],insurance:[1000,15000],investment:[1000,25000],transfer:[500,20000]};
+  const ranges={salary:[45000,120000],rent:[2000,25000],food:[100,2500],groceries:[200,5000],transport:[50,3000],shopping:[300,15000],health:[100,8000],entertainment:[99,999],education:[500,10000],travel:[2000,30000],insurance:[1000,15000],emi:[2500,35000],investment:[1000,25000],transfer:[500,20000]};
 
   // Fixed recurring group IDs for test data
   const recGroups={
@@ -1245,6 +1259,7 @@ function generateTestData(){
     internet: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     entertainment: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     insurance: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    emi: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     investment: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     salary: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     gym: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
@@ -1261,6 +1276,7 @@ function generateTestData(){
     txns.push(mkTx(month,'entertainment','debit',descs,ranges,'monthly',recGroups.entertainment,'Netflix Subscription'));
     txns.push(mkTx(month,'investment','debit',descs,ranges,'monthly',recGroups.investment,'SIP - Mutual Fund'));
     txns.push(mkTx(month,'health','debit',descs,ranges,'monthly',recGroups.gym,'Gym Membership'));
+    txns.push(mkTx(month,'emi','debit',descs,ranges,'monthly',recGroups.emi,'Home Loan EMI'));
     // Half-yearly insurance
     if(m%6===0||m===5)txns.push(mkTx(month,'insurance','debit',descs,ranges,'half-yearly',recGroups.insurance,'LIC Premium'));
     // Variable
