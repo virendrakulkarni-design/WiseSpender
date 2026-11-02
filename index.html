@@ -884,12 +884,16 @@ input,select,textarea{font-family:inherit}
 // CATEGORIES & AUTO-CATEGORIZATION
 // ============================================================
 const DEFAULT_CATEGORIES = [
-  {id:'food',name:'Food & Dining',color:'#fb923c',icon:'&#127829;'},
+  {id:'dining',name:'Dining & Restaurants',color:'#fb923c',icon:'&#127829;'},
+  {id:'vegetables',name:'Food - Vegetables',color:'#84cc16',icon:'&#129382;'},
+  {id:'dryfruits',name:'Food - Dry Fruits',color:'#d97706',icon:'&#129372;'},
   {id:'groceries',name:'Groceries',color:'#34d399',icon:'&#128722;'},
+  {id:'rent',name:'Rent',color:'#818cf8',icon:'&#127968;'},
+  {id:'utilities',name:'Utilities',color:'#f59e0b',icon:'&#9889;'},
+  {id:'health',name:'Health',color:'#f87171',icon:'&#129658;'},
+  {id:'medicines',name:'Medicines',color:'#ec4899',icon:'&#128138;'},
   {id:'transport',name:'Transport',color:'#38bdf8',icon:'&#128663;'},
   {id:'shopping',name:'Shopping',color:'#f472b6',icon:'&#128717;'},
-  {id:'rent',name:'Rent & Utilities',color:'#818cf8',icon:'&#127968;'},
-  {id:'health',name:'Health & Medical',color:'#f87171',icon:'&#128138;'},
   {id:'entertainment',name:'Entertainment',color:'#c084fc',icon:'&#127916;'},
   {id:'education',name:'Education',color:'#2dd4bf',icon:'&#127891;'},
   {id:'travel',name:'Travel',color:'#fbbf24',icon:'&#9992;&#65039;'},
@@ -902,23 +906,29 @@ const DEFAULT_CATEGORIES = [
 ];
 let CATEGORIES = [...DEFAULT_CATEGORIES];
 let CAT_MAP = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+if(CAT_MAP.dining && !CAT_MAP.food) CAT_MAP.food = CAT_MAP.dining;
 
 function refreshCategoriesList(){
   CATEGORIES = [...DEFAULT_CATEGORIES, ...(customCategories||[])];
   CAT_MAP = Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+  if(CAT_MAP.dining && !CAT_MAP.food) CAT_MAP.food = CAT_MAP.dining;
   initCategoryDropdowns();
 }
 
 const CAT_RULES = [
   {cat:'salary',kw:['salary','payroll','wages','income','bonus','stipend','freelance','consulting fee']},
-  {cat:'rent',kw:['rent','electricity','electric bill','water bill','gas bill','utility','broadband','wifi','internet','maintenance','society']},
-  {cat:'food',kw:['swiggy','zomato','restaurant','cafe','pizza','burger','biryani','dominos','mcdonald','starbucks','kfc','dining','food order','ubereats']},
-  {cat:'groceries',kw:['bigbasket','blinkit','grocery','grofers','dmart','supermarket','zepto','instamart','vegetables','fruits','milk']},
+  {cat:'rent',kw:['house rent','flat rent','rent payment','society maintenance','maintenance charges','landlord','room rent']},
+  {cat:'utilities',kw:['electricity','electric bill','water bill','gas bill','utility','utilities','broadband','wifi','internet','bescom','tata power','jio fiber','airtel broadband','piped gas','cylinder','lpg','indane','hp gas','bharat gas','recharge','dth']},
+  {cat:'dining',kw:['swiggy','zomato','restaurant','cafe','pizza','burger','biryani','dominos','mcdonald','starbucks','kfc','dining','food order','ubereats','dineout','eatery','subway','haldiram','barbeque']},
+  {cat:'vegetables',kw:['vegetable','vegetables','sabzi','fruits','veggies','mandi','fresh fruits','fresh produce','otipy','country delight','fruits & vegetables','instamart vegetables']},
+  {cat:'dryfruits',kw:['dry fruit','dry fruits','dryfruits','almond','almonds','cashew','cashews','walnut','walnuts','raisin','raisins','pistachio','dates','happilo','nutraj','dryfruit']},
+  {cat:'groceries',kw:['bigbasket','blinkit','grocery','grofers','dmart','supermarket','zepto','instamart','provisions','kirana','more retail','spencer']},
+  {cat:'health',kw:['hospital','doctor','clinic','consultation','lab test','diagnostic','pathology','health checkup','dentist','dental','gym','fitness','cult.fit','cultfit']},
+  {cat:'medicines',kw:['pharmacy','medicine','medicines','apollo pharmacy','netmeds','1mg','tata 1mg','pharmeasy','medplus','chemist','drugstore','tablet','syrup']},
   {cat:'transport',kw:['uber','ola','lyft','fuel','petrol','diesel','metro','bus','train','irctc','cab','auto','parking','toll','rapido']},
   {cat:'shopping',kw:['amazon','flipkart','myntra','ajio','meesho','shopping','clothes','electronics','gadget','mobile','laptop','nykaa']},
-  {cat:'health',kw:['hospital','doctor','pharmacy','medicine','medical','apollo','lab test','diagnostic','health','gym','fitness']},
   {cat:'entertainment',kw:['netflix','spotify','prime video','hotstar','movie','cinema','gaming','youtube premium','concert','subscription']},
-  {cat:'education',kw:['course','udemy','coursera','tuition','school','college','university','books','exam','coaching']},
+  {cat:'education',kw:['school fees','college fees','tuition fees','course','udemy','coursera','tuition','school','college','university','books','exam','coaching']},
   {cat:'travel',kw:['flight','hotel','booking','airbnb','makemytrip','goibibo','trip','holiday','visa','travel']},
   {cat:'insurance',kw:['insurance','lic','premium','policy','mediclaim','term plan','max life','hdfc life','star health','care health','health insurance','car insurance','bike insurance']},
   {cat:'emi',kw:['emi','loan','home loan','car loan','personal loan','credit card bill','card bill','card payment','credit card emi','bajaj finance','hdb','muthoot','tatacapital']},
@@ -932,7 +942,7 @@ const RECURRING_HINTS = [
   {kw:['sip','mutual fund','ppf','nps','rd '],freq:'monthly'},
   {kw:['insurance','lic','premium','health insurance'],freq:'yearly'},
   {kw:['rent','house rent'],freq:'monthly'},
-  {kw:['electricity','electric bill','water bill','internet','broadband','wifi'],freq:'monthly'},
+  {kw:['electricity','electric bill','water bill','internet','broadband','wifi','gas bill','dth'],freq:'monthly'},
   {kw:['netflix','spotify','hotstar','prime','youtube premium'],freq:'monthly'},
   {kw:['gym','fitness','membership'],freq:'monthly'},
   {kw:['salary','payroll'],freq:'monthly'},
@@ -1153,11 +1163,39 @@ function load(){try{transactions=JSON.parse(localStorage.getItem(LS_KEY))||[];}c
   let needsSave = false;
   transactions.forEach(t=>{
     if(!t.fingerprint){ t.fingerprint=computeFingerprint(t); needsSave = true; }
+    const d = ((t.description||'') + ' ' + (t.targetAccount||'')).toLowerCase();
+    
     // Migrate legacy 'insurance' category for loans/EMIs
     if(t.category === 'insurance'){
-      const d = ((t.description||'') + ' ' + (t.targetAccount||'')).toLowerCase();
       if(['emi','loan','card bill','home loan','car loan','personal loan','credit card bill','bajaj finance'].some(k=>d.includes(k))){
         t.category = 'emi';
+        needsSave = true;
+      }
+    }
+    // Migrate legacy 'rent' for utilities
+    if(t.category === 'rent'){
+      if(['electricity','electric','water','gas','broadband','wifi','internet','utility','bescom','jio fiber','tata power','lpg','cylinder'].some(k=>d.includes(k))){
+        t.category = 'utilities';
+        needsSave = true;
+      }
+    }
+    // Migrate legacy 'health' for medicines
+    if(t.category === 'health'){
+      if(['pharmacy','medicine','medicines','apollo','netmeds','1mg','pharmeasy','medplus','chemist','drugstore'].some(k=>d.includes(k))){
+        t.category = 'medicines';
+        needsSave = true;
+      }
+    }
+    // Migrate legacy 'food' or 'groceries' to specific food categories
+    if(t.category === 'food' || t.category === 'groceries'){
+      if(['dry fruit','dry fruits','dryfruits','almond','almonds','cashew','cashews','walnut','walnuts','raisin','raisins','pistachio','dates','happilo','nutraj'].some(k=>d.includes(k))){
+        t.category = 'dryfruits';
+        needsSave = true;
+      } else if(['vegetable','vegetables','sabzi','fruits','veggies','mandi','fresh fruits','otipy','fresh produce'].some(k=>d.includes(k))){
+        t.category = 'vegetables';
+        needsSave = true;
+      } else if(t.category === 'food'){
+        t.category = 'dining';
         needsSave = true;
       }
     }
@@ -1220,9 +1258,9 @@ function computeFingerprint(tx){
 // ============================================================
 const ACCOUNTS = [
   {id:'HDFC-SA-4521', bank:'HDFC',  label:'Salary Account',  type:'salary',  badge:'Salary',      badgeColor:'var(--green)',  cats:['salary']},
-  {id:'ICICI-CC-8834',bank:'ICICI', label:'Credit Card',     type:'cc',      badge:'Credit Card', badgeColor:'var(--pink)',   cats:['shopping','food','entertainment','travel']},
-  {id:'SBI-SV-7612',  bank:'SBI',   label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--accent)', cats:['rent','insurance','emi','investment']},
-  {id:'Kotak-SV-2089',bank:'Kotak', label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--teal)',   cats:['groceries','transport','health','education']},
+  {id:'ICICI-CC-8834',bank:'ICICI', label:'Credit Card',     type:'cc',      badge:'Credit Card', badgeColor:'var(--pink)',   cats:['shopping','dining','entertainment','travel']},
+  {id:'SBI-SV-7612',  bank:'SBI',   label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--accent)', cats:['rent','utilities','insurance','emi','investment']},
+  {id:'Kotak-SV-2089',bank:'Kotak', label:'Savings Account', type:'savings', badge:'Savings',     badgeColor:'var(--teal)',   cats:['groceries','vegetables','dryfruits','transport','health','medicines','education']},
   {id:'Axis-WL-5500', bank:'Axis',  label:'Digital Wallet',  type:'wallet',  badge:'Wallet',      badgeColor:'var(--amber)',  cats:['transfer','other']},
 ];
 const ACCT_BY_CAT = {};
@@ -1237,25 +1275,30 @@ function generateTestData(){
   const txns=[],now=new Date();
   const descs={
     salary:['Monthly Salary Credit','Freelance Payment','Consulting Fee','Bonus Credit'],
-    rent:['House Rent Payment','Electricity Bill','Internet Bill - Jio Fiber','Society Maintenance','Gas Bill'],
-    food:['Swiggy Order','Zomato Food Delivery','Dominos Pizza','Starbucks Coffee','Restaurant Dinner',"McDonald's",'KFC Order'],
-    groceries:['BigBasket Order','Blinkit Grocery','DMart Purchase','Zepto Delivery','Instamart Vegetables'],
+    rent:['House Rent Payment','Society Maintenance'],
+    utilities:['Electricity Bill - BESCOM','Internet Bill - Jio Fiber','Indane Gas Cylinder','Piped Gas Bill','Water Supply Bill'],
+    dining:['Swiggy Order','Zomato Food Delivery','Dominos Pizza','Starbucks Coffee','Restaurant Dinner',"McDonald's",'KFC Order'],
+    vegetables:['Local Sabzi Mandi','Instamart Fresh Vegetables','Blinkit Fruits Basket','Otipy Farm Fresh','Organic Vegetable Delivery'],
+    dryfruits:['Happilo Almonds & Cashews','Nutraj California Walnuts','Dry Fruits Mart','Premium Afghan Raisins & Pistachios'],
+    groceries:['BigBasket Monthly Staples','DMart Grocery Purchase','Zepto Daily Essentials','Supermarket Rice & Dal'],
     transport:['Uber Ride','Ola Cab','Metro Recharge','Petrol - HP Pump','Rapido Auto','Parking Fee'],
     shopping:['Amazon Purchase','Flipkart Order','Myntra Fashion','Ajio Clothing','Mobile Phone Purchase'],
-    health:['Apollo Pharmacy','Doctor Consultation','Lab Test','Gym Membership'],
+    health:['Doctor Consultation Fee','Gym Membership - Cult.fit','Health Checkup Diagnostic','Dental Clinic'],
+    medicines:['Apollo Pharmacy','Tata 1mg Medicines','Netmeds Prescription Order','Local Chemist Purchase'],
     entertainment:['Netflix Subscription','Spotify Premium','Movie Tickets - PVR','YouTube Premium'],
-    education:['Udemy Course','Coursera Subscription','Book Purchase'],
+    education:['School Fees Payment','Udemy Course','Coursera Subscription','Book Purchase'],
     travel:['Flight Booking','Hotel Booking','MakeMyTrip Package'],
-    insurance:['LIC Premium','Health Insurance','Term Life Insurance','Vehicle Insurance'],
-    emi:['Home Loan EMI','Car Loan EMI','Personal Loan EMI','Credit Card Bill'],
+    insurance:['LIC Premium','Health Insurance Premium','Term Life Insurance','Vehicle Insurance'],
+    emi:['Home Loan EMI','Car Loan EMI','Personal Loan EMI','Credit Card Bill Payment'],
     investment:['SIP - Mutual Fund','Zerodha Trade','PPF Deposit','Fixed Deposit'],
     transfer:['Self Transfer','UPI to Savings','NEFT Transfer'],
   };
-  const ranges={salary:[45000,120000],rent:[2000,25000],food:[100,2500],groceries:[200,5000],transport:[50,3000],shopping:[300,15000],health:[100,8000],entertainment:[99,999],education:[500,10000],travel:[2000,30000],insurance:[1000,15000],emi:[2500,35000],investment:[1000,25000],transfer:[500,20000]};
+  const ranges={salary:[45000,120000],rent:[10000,30000],utilities:[500,4000],dining:[200,3000],vegetables:[150,1500],dryfruits:[400,2500],groceries:[500,5000],transport:[50,3000],shopping:[300,15000],health:[500,6000],medicines:[200,3000],entertainment:[99,999],education:[500,10000],travel:[2000,30000],insurance:[1000,15000],emi:[2500,35000],investment:[1000,25000],transfer:[500,20000]};
 
   // Fixed recurring group IDs for test data
   const recGroups={
     rent: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
+    utilities: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     internet: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     entertainment: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
     insurance: crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2),
@@ -1272,16 +1315,20 @@ function generateTestData(){
     if(Math.random()>0.5)txns.push(mkTx(month,'salary','credit',descs,ranges,null,null,null));
     // Fixed monthly recurring
     txns.push(mkTx(month,'rent','debit',descs,ranges,'monthly',recGroups.rent,'House Rent Payment'));
-    txns.push(mkTx(month,'rent','debit',descs,ranges,'monthly',recGroups.internet,'Internet Bill - Jio Fiber'));
+    txns.push(mkTx(month,'utilities','debit',descs,ranges,'monthly',recGroups.utilities,'Electricity Bill - BESCOM'));
+    txns.push(mkTx(month,'utilities','debit',descs,ranges,'monthly',recGroups.internet,'Internet Bill - Jio Fiber'));
     txns.push(mkTx(month,'entertainment','debit',descs,ranges,'monthly',recGroups.entertainment,'Netflix Subscription'));
     txns.push(mkTx(month,'investment','debit',descs,ranges,'monthly',recGroups.investment,'SIP - Mutual Fund'));
-    txns.push(mkTx(month,'health','debit',descs,ranges,'monthly',recGroups.gym,'Gym Membership'));
+    txns.push(mkTx(month,'health','debit',descs,ranges,'monthly',recGroups.gym,'Gym Membership - Cult.fit'));
     txns.push(mkTx(month,'emi','debit',descs,ranges,'monthly',recGroups.emi,'Home Loan EMI'));
     // Half-yearly insurance
     if(m%6===0||m===5)txns.push(mkTx(month,'insurance','debit',descs,ranges,'half-yearly',recGroups.insurance,'LIC Premium'));
-    // Variable
-    for(let i=0;i<5+Math.floor(Math.random()*6);i++)txns.push(mkTx(month,'food','debit',descs,ranges,null,null,null));
+    // Variable spends
+    for(let i=0;i<4+Math.floor(Math.random()*4);i++)txns.push(mkTx(month,'dining','debit',descs,ranges,null,null,null));
+    for(let i=0;i<3+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'vegetables','debit',descs,ranges,null,null,null));
+    for(let i=0;i<1+Math.floor(Math.random()*2);i++)txns.push(mkTx(month,'dryfruits','debit',descs,ranges,null,null,null));
     for(let i=0;i<2+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'groceries','debit',descs,ranges,null,null,null));
+    for(let i=0;i<1+Math.floor(Math.random()*2);i++)txns.push(mkTx(month,'medicines','debit',descs,ranges,null,null,null));
     for(let i=0;i<3+Math.floor(Math.random()*4);i++)txns.push(mkTx(month,'transport','debit',descs,ranges,null,null,null));
     for(let i=0;i<1+Math.floor(Math.random()*3);i++)txns.push(mkTx(month,'shopping','debit',descs,ranges,null,null,null));
     const oth=['health','education','travel','transfer'];
